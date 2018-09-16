@@ -11,7 +11,8 @@ module.exports = {
 
   port: process.env.PORT || 3000,
   //databaseUri: process.env.MONGODB_URI, временно убрал не находил эту штуку
-  databaseUri: "mongodb://localhost:27017",
+  //databaseUri: "mongodb://localhost:27017",
+  databaseUri: "mongodb://admin1:admin1@ds235352.mlab.com:35352/users",
   cors: {
     credentials: true,
     origin: function(origin, callback) {
@@ -19,7 +20,7 @@ module.exports = {
 
       const whitelist = [
         /localhost/,
-        /##PUT_SITE_NAME_HERE##.herokuapp.com/
+        /zagnut.herokuapp.com/
       ];
 
       for (let i = 0; i < whitelist.length; i++) {
