@@ -35,9 +35,16 @@
     "lodash": "^4.17.10",
     "method-override": "^2.3.10",
     "mongoose": "^5.2.14",
+    "mysql": "^2.16.0",
+    "mysql2": "^1.6.1",
     "nodemailer": "^4.6.8",
     "nodemailer-express-handlebars": "^3.0.0",
     "nodemailer-sendgrid-transport": "^0.2.0",
+    "pg": "^7.4.3",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^4.38.1",
+    "sqlite3": "^4.0.2",
+    "tedious": "^2.6.4",
     "winston": "^2.4.2"
   },
   "devDependencies": {

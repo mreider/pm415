@@ -11,8 +11,8 @@ module.exports = {
 
   port: process.env.PORT || 3000,
   //databaseUri: process.env.MONGODB_URI, временно убрал не находил эту штуку
-  //databaseUri: "mongodb://localhost:27017",
-  databaseUri: "mongodb://admin1:admin1@ds235352.mlab.com:35352/users",
+  databaseUri: "mongodb://localhost:27017",
+  //databaseUri: "mongodb://admin1:admin1@ds235352.mlab.com:35352/users",
   cors: {
     credentials: true,
     origin: function(origin, callback) {
@@ -47,8 +47,12 @@ module.exports = {
 
   mailerConfig: {
     auth: {
-      api_user: process.env.SENDGRID_USERNAME,
-      api_key: process.env.SENDGRID_PASSWORD
+    //  api_user: process.env.SENDGRID_USERNAME,
+    //  api_key: process.env.SENDGRID_PASSWORD
+      api_user: "app108732189@heroku.com",
+      api_key: "ffngmzgl8540"
+    
+    
     },
     from: 'info@domain.com',
     confirmationExpiration: 24 * 60 * 60 * 1000,

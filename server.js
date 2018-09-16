@@ -14,6 +14,9 @@ const AccountRouter = require('./server/routes/account-router');
 const ApplicationRouter = require('./server/routes/app-router');
 const ErrorHandler = require('./server/routes/error-handler');
 const UserTokenMiddleware = require('./server/auth').UserTokenMiddleware;
+const Sequelize = require('sequelize');
+const connection = new Sequelize('mysql://bbaaf0dc2cfc89:c187edac@us-cdbr-iron-east-01.cleardb.net/heroku_299f88593dd4e15?reconnect=true');
+
 
 const promiseDb = async () => {
   return new Promise((resolve, reject) => {
@@ -85,13 +88,26 @@ async function initialize() {
   Logger.info('Starting app...');
 
   await promiseDb();
-  Logger.info('Database connection initialized.');
+  Logger.info('mongo Database connection initialized.');
 
   const app = await promiseApp();
   const server = await promiseServer(app);
   Logger.info('Server initialized.');
 
   await promiseRun(server);
+
+  sequelize
+  .authenticate()
+  .then(() => {
+    Logger.info('mysql Connection has been established successfully.');
+  })
+  .catch(err => {
+    Logger.error('mysql Unable to connect to the database:', err);
+  });
+
 }
+
+
+
 
 initialize();

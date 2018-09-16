@@ -3,6 +3,23 @@ const Crypto = require('crypto');
 const Jwt = require('jsonwebtoken');
 
 const Config = require('../config');
+const PasswordLength = 128;
+const SaltLen = 16;
+const Iterations = 10000;
+const Digest = 'sha512';
+//sham
+const Sequelize = require('sequelize');
+const connection = new Sequelize('mysql://bbaaf0dc2cfc89:c187edac@us-cdbr-iron-east-01.cleardb.net/heroku_299f88593dd4e15?reconnect=true');
+const UserTable = connection.define("Users", {
+  email: Sequelize.STRING ,
+  password: Sequelize.STRING,
+  isActive: Sequelize.BOOLEAN ,
+  confirmedAt: Sequelize.DATE,
+  roles: Sequelize.STRING  
+});
+connection.sync( {
+  logging: console.log
+});
 
 const UserSchema = new Mongoose.Schema({
   email: {type: String, required: true},
@@ -12,10 +29,9 @@ const UserSchema = new Mongoose.Schema({
   roles: [{type: String}]
 });
 
-const PasswordLength = 128;
-const SaltLen = 16;
-const Iterations = 10000;
-const Digest = 'sha512';
+
+
+
 
 UserSchema.statics.AdminRole = 'admin';
 

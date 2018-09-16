@@ -45,6 +45,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       confirm_url: Config.siteUrl + 'verify/?token=' + token
     }
   };
+  console.log("1", mail);
   mailer.sendMail(mail);
   res.json({userId: user._id.toString(), success: true});
 
