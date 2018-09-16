@@ -35,7 +35,7 @@ UserSchema.statics.validateToken = function(token) {
   if (new Date() > expirationDate) {
     return {valid: true, expired: true};
   }
-
+ 
   return {
     valid: true,
     data: decoded,

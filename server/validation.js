@@ -38,4 +38,4 @@ module.exports = {
   LoginSchema,
   RegisterSchema,
   VerifySchema
-};
+}; 

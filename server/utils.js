@@ -4,3 +4,4 @@ module.exports = {
     return str.toLowerCase();
   }
 };
+ 

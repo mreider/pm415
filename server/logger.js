@@ -20,4 +20,4 @@ const transports = [new Winston.transports.Console()];
 module.exports = new Winston.Logger({
   level: 'verbose',
   transports
-});
+}); 

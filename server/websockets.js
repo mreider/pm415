@@ -17,4 +17,4 @@ const start = (io) => {
 module.exports = {
   start: start,
   emitEvent: emitEvent
-};
+}; 
