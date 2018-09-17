@@ -2,7 +2,7 @@ const Express = require('express');
 const Nodemailer = require('nodemailer');
 const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
-const User = require('../models/user');
+const models = require('../models');
 const Config = require('../config');
 
 const {validate, LoginSchema, RegisterSchema} = require('../validation');
@@ -15,24 +15,24 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  const user = await User.findOne({email: email});
+  const user = await models.User.findOne({email: email});
   if (!user) return res.boom.notFound('Not found', {success: false, message: `User with email ${email} not found.`});
   if (!user.isActive || !user.confirmedAt) return res.boom.forbidden('Forbidden', {success: false, message: 'User not confirmed or inactive'});
 
   await user.checkPassword(password);
 
   const token = await user.generateToken();
-  res.json({token: token, isAdmin: user.hasRole(User.AdminRole), success: true});
+  res.json({token: token, isAdmin: user.hasRole(models.User.AdminRole), success: true});
 });
 
 router.post('/register', validate(RegisterSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  let user = await User.findOne({email: email});
+  let user = await models.User.findOne({email: email});
   if (user) return res.boom.conflict('Exists', {success: false, message: `User with email ${email} already exists`});
 
-  user = await User.create(email, password);
+  user = await models.User.create(email, password);
   const token = await user.generateToken({expiresIn: '1d'});
 
   var mail = {

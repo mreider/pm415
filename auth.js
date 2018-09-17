@@ -1,7 +1,6 @@
 
 const Jwt = require('jsonwebtoken');
 const Url = require('url');
-const Logger = require('./logger');
 const Config = require('./config');
 const User = require('./models/user');
 
@@ -49,22 +48,5 @@ module.exports = {
     }
 
     next(null);
-  },
-
-  ConfirmedWalletRequired: (req, res, next) => {
-    if (!req.user) {
-      return res.boom.unauthorized('Authentication required', {success: false});
-    }
-
-    if (!req.user.isActive || !req.user.confirmedAt) {
-      return res.boom.forbidden('User not confirmed or inactive', {success: false});
-    }
-
-    if (!req.user.wallet || !req.user.walletConfirmedAt) {
-      return res.boom.forbidden('Confirmed wallet address required', {success: false});
-    }
-
-    next(null);
   }
 };
- 

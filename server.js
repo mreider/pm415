@@ -1,35 +1,33 @@
 const Express = require('express');
 require('express-async-errors');
-const Cors = require('cors');
+// const Cors = require('cors');
 const BodyParser = require('body-parser');
 const MethodOverride = require('method-override');
 const Boom = require('express-boom');
-const Mongoose = require('mongoose');
 const BearerToken = require('express-bearer-token');
 const Http = require('http');
 const Https = require('https');
-const Logger = require('./server/logger');
-const Config = require('./server/config');
-const AccountRouter = require('./server/routes/account-router');
-const ApplicationRouter = require('./server/routes/app-router');
-const ErrorHandler = require('./server/routes/error-handler');
-const UserTokenMiddleware = require('./server/auth').UserTokenMiddleware;
-const Sequelize = require('sequelize');
-const connection = new Sequelize('mysql://bbaaf0dc2cfc89:c187edac@us-cdbr-iron-east-01.cleardb.net/heroku_299f88593dd4e15?reconnect=true');
 
+const Logger = require('./logger');
+const Config = require('./config');
+const AccountRouter = require('./routes/account-router');
+const ApplicationRouter = require('./routes/app-router');
+const ErrorHandler = require('./routes/error-handler');
+const UserTokenMiddleware = require('./auth').UserTokenMiddleware;
+const db = require('./models').db;
 
 const promiseDb = async () => {
   return new Promise((resolve, reject) => {
-    let options = {};
-    //console.log("11",Config.databaseUri);
-    Mongoose.connect(Config.databaseUri, options);
-    const db = Mongoose.connection;
-
-    db.on('error', reject);
-    db.once('open', () => { resolve(db); });
+    db.authenticate().then(() => {
+      Logger.info('Connection to mysql database has been established successfully.');
+      resolve(db);
+    }).catch(error => {
+      Logger.error(`Unable to connect to mysql database: ${error}, stack: ${error.stack}`);
+      reject(error);
+    });
   });
 };
- 
+
 const promiseApp = async () => {
   return new Promise((resolve, reject) => {
     var app = Express();
@@ -42,11 +40,11 @@ const promiseApp = async () => {
     app.use(BearerToken(Config.bearerOptions));
     app.use(Boom());
 
-    app.use(Cors(Config.cors));
-    app.options('*', Cors(Config.cors));
+    // app.use(Cors(Config.cors));
+    // app.options('*', Cors(Config.cors));
 
     app.use(UserTokenMiddleware());
-    app.use('/api/', ApplicationRouter);    
+    app.use('/api/', ApplicationRouter);
     app.use('/api/account', AccountRouter);
 
     app.use(ErrorHandler);
@@ -88,26 +86,13 @@ async function initialize() {
   Logger.info('Starting app...');
 
   await promiseDb();
-  Logger.info('mongo Database connection initialized.');
+  Logger.info('Database connection initialized.');
 
   const app = await promiseApp();
   const server = await promiseServer(app);
   Logger.info('Server initialized.');
 
   await promiseRun(server);
-
-  sequelize
-  .authenticate()
-  .then(() => {
-    Logger.info('mysql Connection has been established successfully.');
-  })
-  .catch(err => {
-    Logger.error('mysql Unable to connect to the database:', err);
-  });
-
 }
-
-
-
 
 initialize();
