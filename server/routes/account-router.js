@@ -2,7 +2,6 @@ const Express = require('express');
 const Nodemailer = require('nodemailer');
 const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
-const Jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const Config = require('../config');
 
@@ -22,7 +21,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 
   await user.checkPassword(password);
 
-  const token = Jwt.sign({userId: user._id.toString()}, Config.appKey, Config.jwtOptions);
+  const token = await user.generateToken();
   res.json({token: token, isAdmin: user.hasRole(User.AdminRole), success: true});
 });
 
@@ -34,7 +33,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   if (user) return res.boom.conflict('Exists', {success: false, message: `User with email ${email} already exists`});
 
   user = await User.create(email, password);
-  const token = user.generateConfirmationToken();
+  const token = await user.generateToken({expiresIn: '1d'});
 
   var mail = {
     from: Config.mailerConfig.from,
@@ -45,13 +44,9 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
       confirm_url: Config.siteUrl + 'verify/?token=' + token
     }
   };
-  console.log("1", mail);
+
   mailer.sendMail(mail);
   res.json({userId: user._id.toString(), success: true});
-
 });
-
-
-
 
 module.exports = router;

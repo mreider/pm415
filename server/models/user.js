@@ -138,10 +138,11 @@ User.prototype.checkPassword = function(password) {
   });
 };
 
-User.prototype.generateConfirmationToken = function() {
+User.prototype.generateToken = function(optsOverride) {
   return new Promise((resolve, reject) => {
     const data = {userId: this._id.toString()};
-    resolve(Jwt.sign(data, Config.appKey, Config.jwtOptions));
+    const options = Object.assign({}, Config.jwtOptions, optsOverride);
+    resolve(Jwt.sign(data, Config.appKey, options));
   });
 };
 
