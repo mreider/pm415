@@ -6,7 +6,7 @@ const Jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const Config = require('../config');
 
-const {validate, LoginSchema, RegisterSchema, VerifySchema} = require('../validation');
+const {validate, LoginSchema, RegisterSchema} = require('../validation');
 
 const router = Express.Router();
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
@@ -50,7 +50,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   res.json({userId: user._id.toString(), success: true});
 
 });
- 
+
 
 
 
