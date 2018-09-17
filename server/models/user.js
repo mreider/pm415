@@ -1,41 +1,25 @@
-const Mongoose = require('mongoose');
+const Sequelize = require('sequelize');
 const Crypto = require('crypto');
 const Jwt = require('jsonwebtoken');
+
+const db = require('../db').Db;
 
 const Config = require('../config');
 const PasswordLength = 128;
 const SaltLen = 16;
 const Iterations = 10000;
 const Digest = 'sha512';
-//sham
-const Sequelize = require('sequelize');
-const connection = new Sequelize('mysql://bbaaf0dc2cfc89:c187edac@us-cdbr-iron-east-01.cleardb.net/heroku_299f88593dd4e15?reconnect=true');
-const UserTable = connection.define("Users", {
+
+const User = db.define('users', {
   email: Sequelize.STRING ,
   password: Sequelize.STRING,
   isActive: Sequelize.BOOLEAN ,
-  confirmedAt: Sequelize.DATE,
-  roles: Sequelize.STRING  
-});
-connection.sync( {
-  logging: console.log
+  confirmedAt: Sequelize.DATE
 });
 
-const UserSchema = new Mongoose.Schema({
-  email: {type: String, required: true},
-  password: {type: String, required: true},
-  isActive: {type: Boolean},
-  confirmedAt: {type: Date},
-  roles: [{type: String}]
-});
+User.AdminRole = 'admin';
 
-
-
-
-
-UserSchema.statics.AdminRole = 'admin';
-
-UserSchema.statics.validateToken = function(token) {
+User.validateToken = function(token) {
   let decoded = null;
 
   try {
@@ -51,7 +35,7 @@ UserSchema.statics.validateToken = function(token) {
   if (new Date() > expirationDate) {
     return {valid: true, expired: true};
   }
- 
+
   return {
     valid: true,
     data: decoded,
@@ -59,7 +43,7 @@ UserSchema.statics.validateToken = function(token) {
   };
 };
 
-UserSchema.statics.hashPassword = function(password, salt) {
+User.hashPassword = function(password, salt) {
   return new Promise((resolve, reject) => {
     if (!salt) {
       salt = Crypto.randomBytes(SaltLen).toString('hex').slice(0, SaltLen);
@@ -73,7 +57,7 @@ UserSchema.statics.hashPassword = function(password, salt) {
   });
 };
 
-UserSchema.statics.create = function(email, password, isActive = true, roles = []) {
+User.create = function(email, password, isActive = true, roles = []) {
   return new Promise(async (resolve, reject) => {
     const user = new User({
       email: email,
@@ -94,7 +78,7 @@ UserSchema.statics.create = function(email, password, isActive = true, roles = [
   });
 };
 
-UserSchema.statics.verifyUser = function(token) {
+User.verifyUser = function(token) {
   return new Promise(async (resolve, reject) => {
     const validated = User.validateToken(token);
 
@@ -117,14 +101,13 @@ UserSchema.statics.verifyUser = function(token) {
   });
 };
 
-
-UserSchema.statics.assignRoles = function(userId, roles = []) {
+User.assignRoles = function(userId, roles = []) {
   return new Promise(async (resolve, reject) => {
     try {
       const user = await User.findById(userId);
       if (!user) return reject(new Error('User not found'));
 
-      user.roles = Array.from(new Set([].concat(roles).contac(user.roles)));
+      user.roles = Array.from(new Set([].concat(roles).concat(user.roles)));
       await user.save();
 
       resolve(user);
@@ -134,7 +117,7 @@ UserSchema.statics.assignRoles = function(userId, roles = []) {
   });
 };
 
-UserSchema.methods.checkPassword = function(password) {
+User.prototype.checkPassword = function(password) {
   var self = this;
 
   return new Promise(async (resolve, reject) => {
@@ -155,17 +138,15 @@ UserSchema.methods.checkPassword = function(password) {
   });
 };
 
-UserSchema.methods.generateConfirmationToken = function() {
+User.prototype.generateConfirmationToken = function() {
   return new Promise((resolve, reject) => {
     const data = {userId: this._id.toString()};
     resolve(Jwt.sign(data, Config.appKey, Config.jwtOptions));
   });
 };
 
-UserSchema.methods.hasRole = function(role) {
+User.prototype.hasRole = function(role) {
   return this.roles.indexOf(role) !== -1;
 };
-
-const User = Mongoose.model('User', UserSchema, 'users');
 
 module.exports = User;
