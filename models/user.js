@@ -8,17 +8,21 @@ const Iterations = 10000;
 const Digest = 'sha512';
 
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('users', {
+  const User = sequelize.define('User', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     email: { type: DataTypes.STRING, allowNull: false },
     name: { type: DataTypes.STRING, allowNull: true },
     password: { type: DataTypes.STRING, allowNull: false },
-    isActive: { type: DataTypes.BOOLEAN, defaultValue: false },
-    confirmedAt: DataTypes.DATE
-  }, {});
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'is_active' },
+    confirmedAt: { type: DataTypes.DATE, field: 'confirmed_at' },
+    createdAt: { field: 'created_at', type: DataTypes.DATE },
+    updatedAt: { field: 'updated_at', type: DataTypes.DATE }
+  }, {
+    underscored: true
+  });
 
   User.associate = function(models) {
-    User.hasToMany(models.Role);
+    User.hasMany(models.Role);
   };
 
   User.AdminRole = 'admin';
