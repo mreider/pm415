@@ -1,11 +1,16 @@
 'use strict';
+
+const Helpers = require('./helpers');
+
 module.exports = (sequelize, DataTypes) => {
-  const Role = sequelize.define('Role', {
+  const Role = sequelize.define('Role', Helpers.fixFields({
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     role: { type: DataTypes.STRING, allowNull: false },
-    createdAt: { field: 'created_at', type: DataTypes.DATE },
-    updatedAt: { field: 'updated_at', type: DataTypes.DATE }
-  }, {});
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE
+  }), {
+    tableName: 'roles'
+  });
 
   Role.associate = function(models) {
     Role.belongsToMany(models.User, {

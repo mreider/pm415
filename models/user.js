@@ -1,5 +1,8 @@
+'use strict';
+
 const Crypto = require('crypto');
 const Jwt = require('jsonwebtoken');
+const Helpers = require('./helpers');
 
 const Config = require('../config');
 const PasswordLength = 128;
@@ -8,17 +11,17 @@ const Iterations = 10000;
 const Digest = 'sha512';
 
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
+  const User = sequelize.define('User', Helpers.fixFields({
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     email: { type: DataTypes.STRING, allowNull: false },
     name: { type: DataTypes.STRING, allowNull: true },
-    password: { type: DataTypes.STRING, allowNull: false },
-    isActive: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'is_active' },
-    confirmedAt: { type: DataTypes.DATE, field: 'confirmed_at' },
-    createdAt: { field: 'created_at', type: DataTypes.DATE },
-    updatedAt: { field: 'updated_at', type: DataTypes.DATE }
-  }, {
-    underscored: true
+    password: { type: DataTypes.STRING(384), allowNull: false },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: false },
+    confirmedAt: DataTypes.DATE,
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE
+  }), {
+    tableName: 'users'
   });
 
   User.associate = function(models) {
