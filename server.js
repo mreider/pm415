@@ -10,6 +10,7 @@ const Https = require('https');
 
 const Logger = require('./logger');
 const Config = require('./config');
+const RenderRouter = require('./routes/render-router');
 const AccountRouter = require('./routes/account-router');
 const ApplicationRouter = require('./routes/app-router');
 const ErrorHandler = require('./routes/error-handler');
@@ -44,6 +45,7 @@ const promiseApp = async () => {
     // app.options('*', Cors(Config.cors));
 
     app.use(UserTokenMiddleware());
+    app.use('/', RenderRouter);
     app.use('/api/', ApplicationRouter);
     app.use('/api/account', AccountRouter);
 

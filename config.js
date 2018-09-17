@@ -6,7 +6,7 @@ module.exports = {
 
   keepAwake: !!process.env.KEEP_PROCESS_AWAKE,
 
-  siteUrl: 'https://example.com/',
+  siteUrl: 'http://localhost:3000/',
   appKey: '097129fcba444e2dbb8c91ab7002604f7c27503fcf4b46c18708f2852cb654dc',
 
   port: process.env.PORT || 3000,
@@ -63,8 +63,8 @@ module.exports = {
     from: 'info@domain.com',
     confirmationExpiration: 24 * 60 * 60 * 1000,
     rendererConfig: {
-      viewPath: path.join(__dirname, '/../templates/emails/'),
-      extName: '.hbs.html'
+      viewPath: path.join(__dirname, 'templates/emails/'),
+      extName: '.handlebars'
     }
   }
 };
