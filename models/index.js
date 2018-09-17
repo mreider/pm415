@@ -31,6 +31,9 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
+// sham 
+//sequelize.sync(); 
+//для первого запуска генерируем таблицу если будем менять схему, то постоянно надо оставить
 db.db = sequelize;
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

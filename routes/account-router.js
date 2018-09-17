@@ -15,7 +15,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  const user = await models.User.findOne({email: email});
+  const user = await models.User.findOne({where: {email: email}});
   if (!user) return res.boom.notFound('Not found', {success: false, message: `User with email ${email} not found.`});
   if (!user.isActive || !user.confirmedAt) return res.boom.forbidden('Forbidden', {success: false, message: 'User not confirmed or inactive'});
 
@@ -28,8 +28,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 router.post('/register', validate(RegisterSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
-  let user = await models.User.findOne({email: email});
+  let user = await models.User.findOne({where: {email: email}});
   if (user) return res.boom.conflict('Exists', {success: false, message: `User with email ${email} already exists`});
 
   user = await models.User.create(email, password);
