@@ -11,9 +11,9 @@ const Iterations = 10000;
 const Digest = 'sha512';
 
 const User = db.define('users', {
-  email: Sequelize.STRING ,
-  password: Sequelize.STRING,
-  isActive: Sequelize.BOOLEAN ,
+  id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+  password: { type: Sequelize.STRING, allowNull: false },
+  isActive: { type: Sequelize.BOOLEAN, defaultValue: false },
   confirmedAt: Sequelize.DATE
 });
 
@@ -140,7 +140,7 @@ User.prototype.checkPassword = function(password) {
 
 User.prototype.generateToken = function(optsOverride) {
   return new Promise((resolve, reject) => {
-    const data = {userId: this._id.toString()};
+    const data = {userId: this.id};
     const options = Object.assign({}, Config.jwtOptions, optsOverride);
     resolve(Jwt.sign(data, Config.appKey, options));
   });

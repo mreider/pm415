@@ -46,7 +46,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   };
 
   mailer.sendMail(mail);
-  res.json({userId: user._id.toString(), success: true});
+  res.json({userId: user.id, success: true});
 });
 
 module.exports = router;
