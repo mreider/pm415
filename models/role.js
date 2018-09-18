@@ -7,16 +7,13 @@ module.exports = (sequelize, DataTypes) => {
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE
   }, {
-    tableName: 'roles'
+    //tableName: 'roles'
   });
 
   Role.associate = function(models) {
-    Role.belongsToMany(models.User, {
-      as: 'Users',
-      through: 'users_to_roles',
-      onDelete: 'CASCADE',
-      foreignKey: { allowNull: false }
-    });
+    Role.belongsToMany(models.User, {as: 'Users', through: 'UsersToRoles'});
+    Role.belongsToMany(models.User, {as: 'OrganizationUsers', through: 'UsersOrganizationsRoles'});
+    Role.belongsToMany(models.Organization, {as: 'Roles', through: 'UsersOrganizationsRoles'});
   };
 
   return Role;

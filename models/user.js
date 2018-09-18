@@ -13,21 +13,21 @@ module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     email: { type: DataTypes.STRING, allowNull: false },
-    name: { type: DataTypes.STRING, allowNull: true },
     password: { type: DataTypes.STRING(384), allowNull: false },
     isActive: { type: DataTypes.BOOLEAN, defaultValue: false },
     confirmedAt: DataTypes.DATE,
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
     firstName: DataTypes.STRING,
-    lastName: DataTypes.STRING
+    lastName: DataTypes.STRING,
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE
   }, {
-    tableName: 'users'
+    //tableName: 'users'
   });
 
   User.associate = function(models) {
-    User.hasMany(models.Role, {as: 'Roles'});
-    User.hasMany(models.Organization, {as: 'Organizations'});
+    User.belongsToMany(models.Role, {as: 'Roles', through: 'UsersToRoles'});
+    User.belongsToMany(models.Role, {as: 'OrganizationRoles', through: 'UsersOrganizationsRoles'});
+    User.belongsToMany(models.Organization, {as: 'Organizations', through: 'UsersOrganizationsRoles'});
   };
 
   User.AdminRole = 'admin';

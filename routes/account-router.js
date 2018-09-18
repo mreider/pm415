@@ -21,6 +21,8 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 
   await user.checkPassword(password);
 
+  const roles = await user.getRoles();
+
   const token = await user.generateToken();
   res.json({token: token, isAdmin: user.hasRole(models.User.AdminRole), success: true});
 });
@@ -28,8 +30,8 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 router.post('/register', validate(RegisterSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const firstName = req.body.firstname;
-  const lastName = req.body.lastname;
+  const firstName = req.body.firstName;
+  const lastName = req.body.lastName;
   const organization = req.body.organization;
   const confirmation = req.body.confirmation;
 

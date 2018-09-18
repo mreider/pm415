@@ -2,23 +2,19 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface.createTable('users_to_roles', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
       userId: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
+        primaryKey: true
       },
       roleId: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
+        primaryKey: true
       }
     }).then(() => queryInterface.addConstraint('users_to_roles', ['userId'], {
       type: 'FOREIGN KEY',
-      name: 'FK_user_userId',
+      name: 'FK_users_to_roles_users_userId',
       references: {
         table: 'users',
         field: 'id'
@@ -27,7 +23,7 @@ module.exports = {
       onUpdate: 'no action'
     })).then(() => queryInterface.addConstraint('users_to_roles', ['roleId'], {
       type: 'FOREIGN KEY',
-      name: 'FK_role_roleId',
+      name: 'FK_users_to_roles_roles_roleId',
       references: {
         table: 'roles',
         field: 'id'
@@ -38,8 +34,8 @@ module.exports = {
   },
   down: (queryInterface, Sequelize) => {
     return queryInterface
-      .removeConstraint('users_to_roles', 'FK_user_userId')
-      .then(() => queryInterface.removeConstraint('users_to_roles', 'FK_role_roleId'))
+      .removeConstraint('users_to_roles', 'FK_users_to_roles_users_userId')
+      .then(() => queryInterface.removeConstraint('users_to_roles', 'FK_users_to_roles_roles_roleId'))
       .then(() => queryInterface.dropTable('users_to_roles'));
   }
 };

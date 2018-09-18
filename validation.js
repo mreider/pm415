@@ -27,8 +27,8 @@ const LoginSchema = {
 const RegisterSchema = {
   email: Joi.string().email().required().label('Email'),
   password: Joi.string().required().label('Password'),
-  firstname: Joi.string().required().label('Firstname'),
-  lastname: Joi.string().required().label('Lastname'),
+  firstName: Joi.string().required().label('First Name'),
+  lastName: Joi.string().required().label('Last Name'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation'),
   organization: Joi.string().optional().label('Organization')
 };

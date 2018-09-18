@@ -2,7 +2,7 @@
 const Jwt = require('jsonwebtoken');
 const Url = require('url');
 const Config = require('./config');
-const User = require('./models/user');
+const models = require('./models');
 
 module.exports = {
   UserTokenMiddleware: () => {
@@ -11,8 +11,14 @@ module.exports = {
 
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
-        const user = await User.findById(decoded.userId);
-        if (user) req.user = user;
+        const [user, organization] = await Promise.all([
+          models.User.findById(decoded.userId),
+          models.Organization.findById(decoded.organizationId)
+        ]);
+
+        req.user = user;
+        req.organization = organization;
+
         next(null);
       } catch (error) {
         next(null);
