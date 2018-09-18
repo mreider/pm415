@@ -1,12 +1,13 @@
 const Express = require('express');
+const OmitDeep = require('omit-deep');
 
 const router = Express.Router();
 
-const models = require('../models');
 const middlewares = require('../auth');
 
 router.get('/', middlewares.LoginRequired, function(req, res) {
-  res.json({me: 'me'});
+  const user = OmitDeep(req.user.toJSON(), ['password']);
+  res.json({success: true, user});
 });
 
 module.exports = router;

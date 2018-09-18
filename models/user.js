@@ -1,38 +1,76 @@
-'use strict';
-
 const Crypto = require('crypto');
 const Jwt = require('jsonwebtoken');
+const ModelBase = require('../db').modelBase;
 
 const Config = require('../config');
+const Bookshelf = require('../db').bookshelf;
+
+const Organization = require('./organization');
+
 const PasswordLength = 128;
 const SaltLen = 16;
 const Iterations = 10000;
 const Digest = 'sha512';
 
-module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    email: { type: DataTypes.STRING, allowNull: false },
-    password: { type: DataTypes.STRING(384), allowNull: false },
-    isActive: { type: DataTypes.BOOLEAN, defaultValue: false },
-    confirmedAt: DataTypes.DATE,
-    firstName: DataTypes.STRING,
-    lastName: DataTypes.STRING,
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE
-  }, {
-    //tableName: 'users'
-  });
+const User = ModelBase.extend({
+  tableName: 'users',
 
-  User.associate = function(models) {
-    User.belongsToMany(models.Role, {as: 'Roles', through: 'UsersToRoles'});
-    User.belongsToMany(models.Role, {as: 'OrganizationRoles', through: 'UsersOrganizationsRoles'});
-    User.belongsToMany(models.Organization, {as: 'Organizations', through: 'UsersOrganizationsRoles'});
-  };
+  // Association
 
-  User.AdminRole = 'admin';
+  organizations() {
+    return this.belongsToMany(Organization, 'users_organizations_roles', 'user_id', 'organization_id');
+  },
 
-  User.validateToken = function(token) {
+  // Instance methods
+
+  checkPassword(password) {
+    var self = this;
+
+    return new Promise(async (resolve, reject) => {
+      const parts = self.get('password').split('.');
+
+      if (parts.length !== 3) return reject(new Error('Password missing or incorrect'));
+
+      const salt = parts[0];
+
+      try {
+        const hashed = await User.hashPassword(password, salt);
+        if (hashed !== self.get('password')) return reject(new Error('Password mismatch'));
+
+        return resolve(self);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  generateToken(opts) {
+    return new Promise((resolve, reject) => {
+      const data = {userId: this.get('id')};
+      const jwtOptions = Object.assign({}, Config.jwtOptions, opts);
+      resolve(Jwt.sign(data, Config.appKey, jwtOptions));
+    });
+  }
+}, {
+  // Static methods
+
+  AdminRole: 'admin',
+
+  async hashPassword(password, salt) {
+    return new Promise((resolve, reject) => {
+      if (!salt) {
+        salt = Crypto.randomBytes(SaltLen).toString('hex').slice(0, SaltLen);
+      }
+
+      Crypto.pbkdf2(password, salt, Iterations, PasswordLength, Digest, (error, hash) => {
+        if (error) return reject(error);
+
+        resolve([salt, Iterations.toString(), hash.toString('hex')].join('.'));
+      });
+    });
+  },
+
+  validateToken(token) {
     let decoded = null;
 
     try {
@@ -54,51 +92,11 @@ module.exports = (sequelize, DataTypes) => {
       data: decoded,
       expired: false
     };
-  };
+  },
 
-  User.hashPassword = function(password, salt) {
-    return new Promise((resolve, reject) => {
-      if (!salt) {
-        salt = Crypto.randomBytes(SaltLen).toString('hex').slice(0, SaltLen);
-      }
-
-      Crypto.pbkdf2(password, salt, Iterations, PasswordLength, Digest, (error, hash) => {
-        if (error) return reject(error);
-
-        resolve([salt, Iterations.toString(), hash.toString('hex')].join('.'));
-      });
-    });
-  };
-
-  User.create = function(email, password, firstName, lastName, organization, isActive = true, roles = []) {
+  verifyUser(token) {
     return new Promise(async (resolve, reject) => {
-      const user = new User({
-        email: email,
-        password: password,
-        isActive: isActive,
-        confirmedAt: null,
-        roles: roles,
-        firstName: firstName,
-        lastName: lastName,
-        organization: organization
-      });
-
-      try {
-        user.password = await User.hashPassword(password);
-
-        await user.save();
-
-        resolve(user);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  };
-  //++
-
-  User.verifyUser = function(token) {
-    return new Promise(async (resolve, reject) => {
-      const validated = User.validateToken(token);
+      const validated = this.validateToken(token);
 
       if (!validated.valid || !validated.data) return reject(new Error('Token invalid'));
       if (validated.expired) return reject(new Error({message: 'Confirmation url expired', expired: true}));
@@ -107,9 +105,9 @@ module.exports = (sequelize, DataTypes) => {
         const user = await User.findById(validated.data.userId);
 
         if (!user) return reject(new Error('User not found'));
-        if (user.confirmedAt) return reject(new Error({message: 'User already confirmed', alreadyConfirmed: true}));
+        if (user.get('confirmedAt')) return reject(new Error({message: 'User already confirmed', alreadyConfirmed: true}));
 
-        user.confirmedAt = new Date();
+        user.set({confirmedAt: new Date()});
         await user.save();
 
         resolve(user);
@@ -117,56 +115,40 @@ module.exports = (sequelize, DataTypes) => {
         reject(error);
       }
     });
-  };
+  },
 
-  User.assignRoles = function(userId, roles = []) {
+  resetPassword(token, password, confirmation) {
     return new Promise(async (resolve, reject) => {
+      if (password !== confirmation) return reject(new Error('Password and confirmation does not match'));
+
+      const validated = User.validateToken(token);
+
+      if (!validated.valid) return reject(new Error('Token invalid'));
+      if (validated.expired) return reject(new Error({message: 'Confirmation url expired', expired: true}));
+
       try {
-        const user = await User.findById(userId);
+        const user = await User.findById(validated.data.userId);
+
         if (!user) return reject(new Error('User not found'));
 
-        user.roles = Array.from(new Set([].concat(roles).concat(user.roles)));
-        await user.save();
+        if (!user.get('confirmedAt')) {
+          user.confirmedAt = new Date();
+        }
 
+        user.password = await User.hashPassword(password);
+
+        await user.save();
         resolve(user);
       } catch (error) {
         reject(error);
       }
     });
-  };
+  },
 
-  User.prototype.checkPassword = function(password) {
-    var self = this;
+  async create(email, password, firstName, lastName, organization) {
+    const hash = await this.hashPassword(password);
+    return User.forge({email, password: hash, firstName, lastName}).save();
+  }
+});
 
-    return new Promise(async (resolve, reject) => {
-      const parts = self.password.split('.');
-
-      if (parts.length !== 3) return reject(new Error('Password missing or incorrect'));
-
-      const salt = parts[0];
-
-      try {
-        const hashed = await User.hashPassword(password, salt);
-        if (hashed !== self.password) return reject(new Error('Password mismatch'));
-
-        return resolve(self);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  };
-
-  User.prototype.generateToken = function(optsOverride) {
-    return new Promise((resolve, reject) => {
-      const data = {userId: this.id};
-      const options = Object.assign({}, Config.jwtOptions, optsOverride);
-      resolve(Jwt.sign(data, Config.appKey, options));
-    });
-  };
-
-  User.prototype.hasRole = function(role) {
-    return this.roles.indexOf(role) !== -1;
-  };
-
-  return User;
-};
+module.exports = Bookshelf.model('User', User);

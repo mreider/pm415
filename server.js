@@ -16,18 +16,19 @@ const OrgRouter = require('./routes/org-router');
 const ApplicationRouter = require('./routes/app-router');
 const ErrorHandler = require('./routes/error-handler');
 const UserTokenMiddleware = require('./auth').UserTokenMiddleware;
-const db = require('./models').db;
+const db = require('./db');
 
 const promiseDb = async () => {
-  return new Promise((resolve, reject) => {
-    db.authenticate().then(() => {
-      Logger.info('Connection to mysql database has been established successfully.');
-      resolve(db);
-    }).catch(error => {
-      Logger.error(`Unable to connect to mysql database: ${error}, stack: ${error.stack}`);
-      reject(error);
-    });
-  });
+  return Promise.resolve();
+  // return new Promise((resolve, reject) => {
+  //   db.authenticate().then(() => {
+  //     Logger.info('Connection to mysql database has been established successfully.');
+  //     resolve(db);
+  //   }).catch(error => {
+  //     Logger.error(`Unable to connect to mysql database: ${error}, stack: ${error.stack}`);
+  //     reject(error);
+  //   });
+  // });
 };
 
 const promiseApp = async () => {

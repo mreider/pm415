@@ -1,19 +1,21 @@
-'use strict';
+const ModelBase = require('../db').modelBase;
+const Bookshelf = require('../db').bookshelf;
 
-module.exports = (sequelize, DataTypes) => {
-  const Organization = sequelize.define('Organization', {
-    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    name: DataTypes.STRING,
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE
-  }, {
-    //tableName: 'organizations'
-  });
+const User = require('./user');
 
-  Organization.associate = function(models) {
-    Organization.belongsToMany(models.User, {as: 'Members', through: 'UsersOrganizationsRoles'});
-    Organization.belongsToMany(models.Role, {as: 'Roles', through: 'UsersOrganizationsRoles'});
-  };
+const Organization = ModelBase.extend({
+  tableName: 'organizations',
 
-  return Organization;
-};
+  // Association
+
+  users() {
+    return this.belongsToMany(User, 'users_organizations_roles', 'organization_id', 'user_id');
+  }
+
+  // Instance methods
+
+}, {
+  // Static methods
+});
+
+module.exports = Bookshelf.model('Organization', Organization);

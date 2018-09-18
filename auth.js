@@ -1,8 +1,10 @@
 
 const Jwt = require('jsonwebtoken');
-const Url = require('url');
+// const Url = require('url');
 const Config = require('./config');
-const models = require('./models');
+
+const User = require('./models/user');
+const Organization = require('./models/organization');
 
 module.exports = {
   UserTokenMiddleware: () => {
@@ -12,8 +14,8 @@ module.exports = {
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
         const [user, organization] = await Promise.all([
-          models.User.findById(decoded.userId),
-          models.Organization.findById(decoded.organizationId)
+          User.where({id: decoded.userId}).fetch({withRelated: ['organizations']}),
+          Organization.where({id: decoded.organizationId || 0}).fetch()
         ]);
 
         req.user = user;
@@ -31,28 +33,28 @@ module.exports = {
       return res.boom.unauthorized('Authentication required', {success: false});
     }
 
-    if (!req.user.isActive || !req.user.confirmedAt) {
+    if (!req.user.get('isActive') || !req.user.get('confirmedAt')) {
       return res.boom.forbidden('User not confirmed or inactive', {success: false});
     }
 
     next(null);
   },
 
-  AdminRequired: (req, res, next) => {
-    var redirect = req.headers.referer ? Url.parse(req.headers.referer).path : '/';
+  // AdminRequired: (req, res, next) => {
+  //   var redirect = req.headers.referer ? Url.parse(req.headers.referer).path : '/';
 
-    if (!req.user) {
-      return res.boom.unauthorized('Authentication required', {success: false, redirect: '/login?next=' + redirect});
-    }
+  //   if (!req.user) {
+  //     return res.boom.unauthorized('Authentication required', {success: false, redirect: '/login?next=' + redirect});
+  //   }
 
-    if (!req.user.isActive || !req.user.confirmedAt) {
-      return res.boom.forbidden('User not confirmed or inactive', {success: false});
-    }
+  //   if (!req.user.get('isActive') || !req.user.get('confirmedAt')) {
+  //     return res.boom.forbidden('User not confirmed or inactive', {success: false});
+  //   }
 
-    if (!req.user.hasRole(User.AdminRole)) {
-      return res.boom.unauthorized('Admin privileges required', {success: false, redirect: '/login?next=' + redirect});
-    }
+  //   if (!req.user.hasRole(User.AdminRole)) {
+  //     return res.boom.unauthorized('Admin privileges required', {success: false, redirect: '/login?next=' + redirect});
+  //   }
 
-    next(null);
-  }
+  //   next(null);
+  // }
 };
