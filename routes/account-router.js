@@ -22,7 +22,6 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   await user.checkPassword(password);
 
   const token = await user.generateToken();
-  //sham убрал работу с ролями пока
   //res.json({token: token, isAdmin: user.hasRole(models.User.AdminRole), success: true});
   res.json({token: token, isAdmin: true, success: true});
 
