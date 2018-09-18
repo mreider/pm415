@@ -26,7 +26,11 @@ const LoginSchema = {
 
 const RegisterSchema = {
   email: Joi.string().email().required().label('Email'),
-  password: Joi.string().required().label('Password')
+  password: Joi.string().required().label('Password'),
+  firstname: Joi.string().required().label('Firstname'),
+  lastname: Joi.string().required().label('Lastname'),
+  confirmation: Joi.string().required().label('Confirmation'),
+  organization : Joi.string().required().label('Organization'),
 };
 
 const VerifySchema = {

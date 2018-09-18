@@ -30,10 +30,16 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 router.post('/register', validate(RegisterSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const firstName = req.body.firstname;
+  const lastName = req.body.lastname;
+  const organization = req.body.organization;
+  const confirmation  = req.body.confirmation;
+
   let user = await models.User.findOne({where: {email: email}});
   if (user) return res.boom.conflict('Exists', {success: false, message: `User with email ${email} already exists`});
+  if (password !== confirmation )  return res.boom.conflict('Not confirmed password', {success: false, message: `Password and confirmation do not match`});
 
-  user = await models.User.create(email, password);
+  user = await models.User.create(email, password, firstName, lastName, organization);//++
   const token = await user.generateToken({expiresIn: '1d'});
 
   var mail = {

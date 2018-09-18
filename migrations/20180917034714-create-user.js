@@ -19,6 +19,12 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
+        first_name: {
+        type: Sequelize.STRING
+      },
+        last_name: {
+        type: Sequelize.STRING
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         defaultValue: false

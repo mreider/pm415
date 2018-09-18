@@ -19,10 +19,14 @@ module.exports = (sequelize, DataTypes) => {
     isActive: { type: DataTypes.BOOLEAN, defaultValue: false },
     confirmedAt: DataTypes.DATE,
     createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE
+    updatedAt: DataTypes.DATE,
+    firstName: DataTypes.STRING,
+    lastName: DataTypes.STRING,
+    organization: DataTypes.STRING
   }), {
     tableName: 'users'
   });
+  
 
   User.associate = function(models) {
     User.hasMany(models.Role);
@@ -68,18 +72,22 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
-  User.create = function(email, password, isActive = true, roles = []) {
+  User.create = function(email, password, firstName, lastName, organization, isActive = true, roles = []) {
     return new Promise(async (resolve, reject) => {
       const user = new User({
         email: email,
         password: password,
         isActive: isActive,
         confirmedAt: null,
-        roles: roles
+        roles: roles,
+        firstName: firstName,
+        lastName: lastName,
+        organization: organization
       });
 
       try {
         user.password = await User.hashPassword(password);
+
         await user.save();
 
         resolve(user);
@@ -88,6 +96,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     });
   };
+  //++
 
   User.verifyUser = function(token) {
     return new Promise(async (resolve, reject) => {
