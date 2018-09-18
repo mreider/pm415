@@ -16,7 +16,10 @@ module.exports = {
         type: Sequelize.STRING(384),
         allowNull: false
       },
-      name: {
+      firstName: {
+        type: Sequelize.STRING
+      },
+      lastName: {
         type: Sequelize.STRING
       },
       isActive: {

@@ -7,7 +7,6 @@ const Boom = require('express-boom');
 const BearerToken = require('express-bearer-token');
 const Http = require('http');
 const Https = require('https');
-
 const Logger = require('./logger');
 const Config = require('./config');
 const RenderRouter = require('./routes/render-router');
