@@ -17,7 +17,6 @@ module.exports = {
     options: {
       operatorsAliases: false,
       dialect: 'mysql',
-      underscored: true,
       freezeTableName: true
     }
   },

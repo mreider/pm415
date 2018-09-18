@@ -2,7 +2,6 @@
 
 const Crypto = require('crypto');
 const Jwt = require('jsonwebtoken');
-const Helpers = require('./helpers');
 
 const Config = require('../config');
 const PasswordLength = 128;
@@ -11,7 +10,7 @@ const Iterations = 10000;
 const Digest = 'sha512';
 
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', Helpers.fixFields({
+  const User = sequelize.define('User', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     email: { type: DataTypes.STRING, allowNull: false },
     name: { type: DataTypes.STRING, allowNull: true },
@@ -20,12 +19,12 @@ module.exports = (sequelize, DataTypes) => {
     confirmedAt: DataTypes.DATE,
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE
-  }), {
+  }, {
     tableName: 'users'
   });
 
   User.associate = function(models) {
-    User.hasMany(models.Role);
+    User.hasMany(models.Role, {as: 'Roles'});
   };
 
   User.AdminRole = 'admin';

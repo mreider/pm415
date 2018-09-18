@@ -19,19 +19,19 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
-      is_active: {
+      isActive: {
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },
-      confirmed_at: {
+      confirmedAt: {
         type: Sequelize.DATE,
         allowNull: true
       },
-      created_at: {
+      createdAt: {
         allowNull: false,
         type: Sequelize.DATE
       },
-      updated_at: {
+      updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
       }

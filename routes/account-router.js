@@ -21,10 +21,11 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 
   await user.checkPassword(password);
 
-  const token = await user.generateToken();
-  //res.json({token: token, isAdmin: user.hasRole(models.User.AdminRole), success: true});
-  res.json({token: token, isAdmin: true, success: true});
+  const role = await user.getRole();
 
+  const token = await user.generateToken();
+  res.json({token: token, isAdmin: user.hasRole(models.User.AdminRole), success: true});
+  // res.json({token: token, isAdmin: true, success: true});
 });
 
 router.post('/register', validate(RegisterSchema), async (req, res) => {
