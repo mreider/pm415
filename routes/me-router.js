@@ -3,7 +3,7 @@ const OmitDeep = require('omit-deep');
 
 const router = Express.Router();
 
-const middlewares = require('../auth');
+const middlewares = require('../middlewares');
 
 router.get('/', middlewares.LoginRequired, function(req, res) {
   const user = OmitDeep(req.user.toJSON(), ['password']);

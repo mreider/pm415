@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const Express = require('express');
 const Nodemailer = require('nodemailer');
 const SendGridTransport = require('nodemailer-sendgrid-transport');
@@ -16,13 +17,15 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  const user = await User.where({email}).fetch();
+  const user = await User.where({email}).fetch({withRelated: ['organizations']});
   if (!user) return res.boom.notFound('Not found', {success: false, message: `User with email ${email} not found.`});
   if (!user.get('isActive') || !user.get('confirmedAt')) return res.boom.forbidden('Forbidden', {success: false, message: 'User not confirmed or inactive'});
 
   await user.checkPassword(password);
 
-  const token = await user.generateToken();
+  const orgId = _.get(user.related('organizations'), 'models[0].id');
+
+  const token = await user.generateToken({}, {organizationId: orgId});
   res.json({token: token, success: true});
 });
 

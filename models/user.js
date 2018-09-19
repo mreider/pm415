@@ -44,9 +44,9 @@ const User = ModelBase.extend({
     });
   },
 
-  generateToken(opts) {
+  generateToken(opts, data) {
     return new Promise((resolve, reject) => {
-      const data = {userId: this.get('id')};
+      data = Object.assign({}, {userId: this.get('id')}, data);
       const jwtOptions = Object.assign({}, Config.jwtOptions, opts);
       resolve(Jwt.sign(data, Config.appKey, jwtOptions));
     });
