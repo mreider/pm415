@@ -27,8 +27,8 @@ const LoginSchema = {
 const RegisterSchema = {
   email: Joi.string().email().required().label('Email'),
   password: Joi.string().required().label('Password'),
-  firstName: Joi.string().required().label('First Name'),
-  lastName: Joi.string().required().label('Last Name'),
+  firstname: Joi.string().required().label('First Name'),
+  lastname: Joi.string().required().label('Last Name'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation'),
   organization: Joi.string().optional().label('Organization')
 };
@@ -36,10 +36,14 @@ const RegisterSchema = {
 const VerifySchema = {
   token: Joi.string().required()
 };
+const ForgotPasswordSchema = {
+  email: Joi.string().email().required().label('Email')
+};
 
 module.exports = {
   validate: validate,
   LoginSchema,
   RegisterSchema,
-  VerifySchema
+  VerifySchema,
+  ForgotPasswordSchema
 };
