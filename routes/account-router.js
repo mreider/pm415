@@ -36,7 +36,22 @@ router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) 
 
   const user = await User.where({email}).fetch({withRelated: ['organizations']});
   if (!user) return res.boom.notFound('Not found', {success: false, message: `User with email ${email} not found.`});
-  res.json({message: `Message send to {email}`, success: true});
+
+  const token = await user.generateToken({expiresIn: '1d'});
+
+  var mail = {
+    from: Config.mailerConfig.from,
+    to: user.get('email'),
+    subject: 'Password recovery',
+    template: 'email-verification',
+    context: {
+      confirm_url: Config.siteUrl + 'forgotpassword/?token=' + token + '&email=' +user.get('email')
+    }
+  };
+
+  mailer.sendMail(mail);
+  
+  res.json({message: `A message was sent to the ${email}`, success: true, userId: user.id});
 });
 
 
@@ -63,7 +78,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     subject: 'Email verification',
     template: 'email-verification',
     context: {
-      confirm_url: Config.siteUrl + 'verify/?token=' + token
+      confirm_url: Config.siteUrl + 'verify/?token=' + token 
     }
   };
 
