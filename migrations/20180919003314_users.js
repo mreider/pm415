@@ -8,8 +8,8 @@ exports.up = function(knex, Promise) {
     last_name         varchar(255)  DEFAULT NULL,
     is_active         tinyint(1)    DEFAULT '0',
     confirmed_at      datetime      DEFAULT NULL,
-    created_at        datetime      NOT NULL,
-    updated_at        datetime      NOT NULL,
+    created_at        datetime      NOT NULL      DEFAULT CURRENT_TIMESTAMP,
+    updated_at        datetime      NOT NULL      DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
   );`);
 };
