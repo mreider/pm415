@@ -121,7 +121,7 @@ const User = ModelBase.extend({
     return new Promise(async (resolve, reject) => {
       if (password !== confirmation) return reject(new Error('Password and confirmation does not match'));
 
-      const validated = User.validateToken(token);
+      const validated = this.validateToken(token);
 
       if (!validated.valid) return reject(new Error('Token invalid'));
       if (validated.expired) return reject(new Error({ message: 'Confirmation url expired', expired: true }));
@@ -130,14 +130,10 @@ const User = ModelBase.extend({
         const user = await User.findById(validated.data.userId);
 
         if (!user) return reject(new Error('User not found'));
-
-        if (!user.get('confirmedAt')) {
-          user.confirmedAt = new Date();
-        }
-
-        user.password = await User.hashPassword(password);
-
+        const hash = await this.hashPassword(password);
+        user.set({ password: hash });
         await user.save();
+
         resolve(user);
       } catch (error) {
         reject(error);

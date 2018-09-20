@@ -82,4 +82,12 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   res.json({ userId: user.id, success: true });
 });
 
+router.post('/changepassword', async(req, res) => {
+  const token = req.body.token;
+  const password = req.body.password;
+  const confirmation = req.body.confirmation;
+  let user = await User.resetPassword(token, password, confirmation);
+  res.json({ userId: user.id, success: true });
+});
+
 module.exports = router;

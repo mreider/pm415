@@ -16,7 +16,7 @@ const OrgRouter = require('./routes/org-router');
 const ApplicationRouter = require('./routes/app-router');
 const ErrorHandler = require('./routes/error-handler');
 const UserTokenMiddleware = require('./middlewares').UserTokenMiddleware;
-//const db = require('./db');
+// const db = require('./db');
 
 const promiseDb = async () => {
   return Promise.resolve();
