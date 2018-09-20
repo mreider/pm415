@@ -1,10 +1,10 @@
 
 exports.up = function(knex, Promise) {
   return knex.raw(`CREATE TABLE organizations (
-    id                int(11)       NOT NULL AUTO_INCREMENT,
-    name              varchar(255)  NOT NULL,
-    created_at        datetime      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-    updated_at        datetime      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    id                MEDIUMINT     NOT NULL AUTO_INCREMENT,
+    name              VARCHAR(255)  NOT NULL,
+    created_at        DATETIME      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
   );`);
 };
