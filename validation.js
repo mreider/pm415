@@ -4,13 +4,13 @@ const validate = (schema, source) => {
   return function(req, res, next) {
     if (!source) source = (request, response) => { return request.body; };
 
-    Joi.validate(source(req, res), schema, {abortEarly: true}, function(err, validationResult) {
+    Joi.validate(source(req, res), schema, { abortEarly: true }, function(err, validationResult) {
       if (err) {
         let details = err.details.map(detail => {
           return detail.message;
         });
 
-        return res.boom.badRequest(details, {success: false});
+        return res.boom.badRequest(details, { success: false });
       }
 
       req.schema = schema;

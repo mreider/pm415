@@ -2,10 +2,10 @@ const Config = require('./config');
 
 module.exports = {
   // development: {
-    client: 'mysql',
-    // connection: {
-      connection: Config.db.databaseUri
-    // }
+  client: 'mysql',
+  // connection: {
+  connection: Config.db.databaseUri
+  // }
   // }
 
   // staging: {

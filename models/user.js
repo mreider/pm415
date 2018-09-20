@@ -46,7 +46,7 @@ const User = ModelBase.extend({
 
   generateToken(opts, data) {
     return new Promise((resolve, reject) => {
-      data = Object.assign({}, {userId: this.get('id')}, data);
+      data = Object.assign({}, { userId: this.get('id') }, data);
       const jwtOptions = Object.assign({}, Config.jwtOptions, opts);
       resolve(Jwt.sign(data, Config.appKey, jwtOptions));
     });
@@ -76,15 +76,15 @@ const User = ModelBase.extend({
     try {
       decoded = Jwt.verify(token, Config.appKey);
     } catch (error) {
-      if (error.name === 'TokenExpiredError') return {valid: true, expired: true};
+      if (error.name === 'TokenExpiredError') return { valid: true, expired: true };
 
-      return {valid: false};
+      return { valid: false };
     }
 
     const expirationDate = new Date(decoded.exp * 1000);
 
     if (new Date() > expirationDate) {
-      return {valid: true, expired: true};
+      return { valid: true, expired: true };
     }
 
     return {
@@ -99,15 +99,15 @@ const User = ModelBase.extend({
       const validated = this.validateToken(token);
 
       if (!validated.valid || !validated.data) return reject(new Error('Token invalid'));
-      if (validated.expired) return reject(new Error({message: 'Confirmation url expired', expired: true}));
+      if (validated.expired) return reject(new Error({ message: 'Confirmation url expired', expired: true }));
 
       try {
         const user = await User.findById(validated.data.userId);
 
         if (!user) return reject(new Error('User not found'));
-        if (user.get('confirmedAt')) return reject(new Error({message: 'User already confirmed', alreadyConfirmed: true}));
+        if (user.get('confirmedAt')) return reject(new Error({ message: 'User already confirmed', alreadyConfirmed: true }));
 
-        user.set({confirmedAt: new Date()});
+        user.set({ confirmedAt: new Date() });
         await user.save();
 
         resolve(user);
@@ -124,7 +124,7 @@ const User = ModelBase.extend({
       const validated = User.validateToken(token);
 
       if (!validated.valid) return reject(new Error('Token invalid'));
-      if (validated.expired) return reject(new Error({message: 'Confirmation url expired', expired: true}));
+      if (validated.expired) return reject(new Error({ message: 'Confirmation url expired', expired: true }));
 
       try {
         const user = await User.findById(validated.data.userId);
@@ -147,7 +147,7 @@ const User = ModelBase.extend({
 
   async create(email, password, firstName, lastName, organization) {
     const hash = await this.hashPassword(password);
-    return User.forge({email, password: hash, firstName, lastName}).save();
+    return User.forge({ email, password: hash, firstName, lastName }).save();
   }
 });
 
