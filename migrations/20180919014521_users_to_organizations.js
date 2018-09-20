@@ -3,8 +3,8 @@ exports.up = function(knex, Promise) {
   return knex.raw(`CREATE TABLE users_organizations_roles (
     user_id           MEDIUMINT     NOT NULL,
     organization_id   MEDIUMINT     NOT NULL,
-    created_at        datetime      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
-    updated_at        datetime      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    created_at        DATETIME      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME      NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, organization_id)
   );`);
 };

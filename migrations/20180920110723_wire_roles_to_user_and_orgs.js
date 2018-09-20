@@ -2,13 +2,10 @@
 exports.up = function(knex, Promise) {
   return knex.raw(`
     ALTER TABLE users_organizations_roles
-    ADD COLUMN role_id MEDIUMINT NOT NULL AFTER organization_id;
-  `).then(() => knex.raw(`
-    ALTER TABLE users_organizations_roles
     ADD CONSTRAINT FK__users_organizations_roles__roles__id
     FOREIGN KEY (role_id)
     REFERENCES roles(id) ON DELETE CASCADE;
-  `)).then(() => knex.raw(`
+  `).then(() => knex.raw(`
     ALTER TABLE users_organizations_roles
     ADD CONSTRAINT FK__users_organizations_roles__users__id
     FOREIGN KEY (user_id)
@@ -17,7 +14,7 @@ exports.up = function(knex, Promise) {
     ALTER TABLE users_organizations_roles
     ADD CONSTRAINT FK__users_organizations_roles__organizations__id
     FOREIGN KEY (organization_id)
-    REFERENCES users(id) ON DELETE CASCADE;
+    REFERENCES organizations(id) ON DELETE CASCADE;
   `)).then(() => knex.raw(`
     ALTER TABLE users_organizations_roles
     DROP PRIMARY KEY,
@@ -51,10 +48,5 @@ exports.down = function(knex, Promise) {
     `);
   }).catch(() => {
     console.log(`Foreign key "FK__users_organizations_roles__roles__id" does not exists and cannot be removed`);
-  }).then(() => {
-    return knex.raw(`
-      ALTER TABLE users_organizations_roles
-      DROP COLUMN role_id;
-    `);
   });
 };
