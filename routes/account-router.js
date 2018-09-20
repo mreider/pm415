@@ -29,8 +29,6 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   res.json({token: token, success: true});
 });
 
-
-
 router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) => {
   const email = req.body.email;
 
@@ -45,22 +43,20 @@ router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) 
     subject: 'Password recovery',
     template: 'email-verification',
     context: {
-      confirm_url: Config.siteUrl + 'forgotpassword/?token=' + token + '&email=' +user.get('email')
+      confirm_url: Config.siteUrl + 'forgotpassword/?token=' + token + '&email=' + user.get('email')
     }
   };
 
   mailer.sendMail(mail);
-  
+
   res.json({message: `A message was sent to the ${email}`, success: true, userId: user.id});
 });
-
-
 
 router.post('/register', validate(RegisterSchema), async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const firstName = req.body.firstname;
-  const lastName = req.body.lastname;
+  const firstName = req.body.firstName;
+  const lastName = req.body.lastName;
   const organization = req.body.organization;
   const confirmation = req.body.confirmation;
 
@@ -68,7 +64,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   if (user) return res.boom.conflict('Exists', {success: false, message: `User with email ${email} already exists`});
   if (password !== confirmation) return res.boom.conflict('Not confirmed password', {success: false, message: `Password and confirmation doesn't match`});
 
-   user = await User.create(email, password, firstName, lastName, organization);
+  user = await User.create(email, password, firstName, lastName, organization);
 
   const token = await user.generateToken({expiresIn: '1d'});
 
@@ -78,7 +74,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     subject: 'Email verification',
     template: 'email-verification',
     context: {
-      confirm_url: Config.siteUrl + 'verify/?token=' + token 
+      confirm_url: Config.siteUrl + 'verify/?token=' + token
     }
   };
 
