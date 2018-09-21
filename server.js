@@ -11,7 +11,7 @@ const Logger = require('./logger');
 const Config = require('./config');
 const RenderRouter = require('./routes/render-router');
 const AccountRouter = require('./routes/account-router');
-const MeRouter = require('./routes/me-router');
+const UserRouter = require('./routes/user-router');
 const OrgRouter = require('./routes/org-router');
 const ApplicationRouter = require('./routes/app-router');
 const ErrorHandler = require('./routes/error-handler');
@@ -50,7 +50,7 @@ const promiseApp = async () => {
     app.use('/', RenderRouter);
     app.use('/api/', ApplicationRouter);
     app.use('/api/account', AccountRouter);
-    app.use('/api/me', MeRouter);
+    app.use('/api/user', UserRouter);
     app.use('/api/org', OrgRouter);
 
     app.use(ErrorHandler);

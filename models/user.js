@@ -20,7 +20,6 @@ const User = ModelBase.extend({
   organizations() {
     return this.belongsToMany(Organization, 'users_organizations_roles', 'user_id', 'organization_id');
   },
-
   // Instance methods
 
   checkPassword(password) {
@@ -134,6 +133,26 @@ const User = ModelBase.extend({
         user.set({ password: hash });
         await user.save();
 
+        resolve(user);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  updateUser(email, password, firstName, lastName, id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const user = await User.findById(id);
+        if (!user) return reject(new Error('User not found'));
+        let data = {};
+        const hash = await this.hashPassword(password);
+        if (password) data.password = hash;
+        if (email) data.email = email;
+        if (firstName) data.firstName = firstName;
+        if (lastName) data.lastName = lastName;
+        user.set(data);
+        await user.save();
         resolve(user);
       } catch (error) {
         reject(error);
