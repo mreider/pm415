@@ -1,15 +1,12 @@
 const Express = require('express');
-const OmitDeep = require('omit-deep');
 const User = require('../models/user');
-const Organization = require('../models/organization');
 
 const router = Express.Router();
 
 const middlewares = require('../middlewares');
 
 router.get('/', middlewares.LoginRequired, function(req, res) {
-  const user = OmitDeep(req.user.toJSON(), ['password']);
-  res.json({ success: true, user });
+  res.json({ success: true, user: req.user.toObject(), organization: req.organization });
 });
 
 router.post('/', middlewares.LoginRequired, async(req, res) => {
@@ -18,10 +15,20 @@ router.post('/', middlewares.LoginRequired, async(req, res) => {
 });
 
 router.get('/orgs', middlewares.LoginRequired, async(req, res) => {
-  // let user = OmitDeep(req.user.toJSON(), ['password']);
-  const orgs = await Organization.where({ id: 2 }).fetch({ withRelated: ['roles'] });
-  res.json({ success: true, orgs: orgs });
-  // res.json({ success: true, organizations: user.organizations, current: req.organization });
+  const user = await User.where({'id': req.user.get('id')}).fetch({withRelated: ['organizations.roles']});
+
+  var organizations = user.related('organizations').map(org => {
+    const role = org.related('roles').first();
+
+    return {
+      id: org.get('id'),
+      name: org.get('name'),
+      role_id: role && role.get('id'),
+      role: role && role.get('role')
+    };
+  });
+
+  res.json({ success: true, organizations });
 });
 
 module.exports = router;

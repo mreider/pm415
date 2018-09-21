@@ -1,11 +1,14 @@
 const Crypto = require('crypto');
 const Jwt = require('jsonwebtoken');
+const OmitDeep = require('omit-deep');
+
 const ModelBase = require('../db').modelBase;
 
 const Config = require('../config');
 const Bookshelf = require('../db').bookshelf;
 
 const Organization = require('./organization');
+const Role = require('./role');
 
 const PasswordLength = 128;
 const SaltLen = 16;
@@ -20,6 +23,11 @@ const User = ModelBase.extend({
   organizations() {
     return this.belongsToMany(Organization, 'users_organizations_roles', 'user_id', 'organization_id');
   },
+
+  roles() {
+    return this.belongsToMany(Role, 'users_organizations_roles', 'user_id', 'role_id');
+  },
+
   // Instance methods
 
   checkPassword(password) {
@@ -49,6 +57,11 @@ const User = ModelBase.extend({
       const jwtOptions = Object.assign({}, Config.jwtOptions, opts);
       resolve(Jwt.sign(data, Config.appKey, jwtOptions));
     });
+  },
+
+  toObject() {
+    const serialized = OmitDeep(this.toJSON(), ['password', 'isActive', 'confirmedAt', 'createdAt', 'updatedAt']);
+    return serialized;
   }
 }, {
   // Static methods

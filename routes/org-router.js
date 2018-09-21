@@ -15,6 +15,8 @@ router.post('/switch/:organizationId', middlewares.LoginRequired, async (req, re
 
   if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization with ID ${organizationId} not found.` });
 
+  // TODO: Check that user belongs to this organization and return his role/status too
+
   const token = await req.user.generateToken({}, { organizationId });
 
   return res.json({ success: true, organization, token });

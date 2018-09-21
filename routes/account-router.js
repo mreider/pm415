@@ -3,6 +3,7 @@ const Express = require('express');
 const Nodemailer = require('nodemailer');
 const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
+
 const Config = require('../config');
 
 const { validate, LoginSchema, RegisterSchema, ForgotPasswordSchema } = require('../validation');
@@ -26,7 +27,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   const orgId = _.get(user.related('organizations'), 'models[0].id');
 
   const token = await user.generateToken({}, { organizationId: orgId });
-  res.json({ token: token, success: true });
+  res.json({ token: token, success: true, user: user.toObject() });
 });
 
 router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) => {
