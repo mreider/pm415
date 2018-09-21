@@ -21,27 +21,26 @@ module.exports = {
     }
   },
 
-  // Temporary disabled until code deployed for test
-  // cors: {
-  //   credentials: true,
-  //   origin: function(origin, callback) {
-  //     if (typeof origin === 'undefined') return callback(null, true);
+  cors: {
+    credentials: true,
+    origin: function(origin, callback) {
+      if (typeof origin === 'undefined') return callback(null, true);
 
-  //     const whitelist = [
-  //       /localhost/,
-  //       /zagnut.herokuapp.com/
-  //     ];
+      const whitelist = [
+        /localhost/,
+        /zagnut.herokuapp.com/
+      ];
 
-  //     for (let i = 0; i < whitelist.length; i++) {
-  //       const element = whitelist[i];
+      for (let i = 0; i < whitelist.length; i++) {
+        const element = whitelist[i];
 
-  //       if (element.test(origin)) return callback(null, true);
-  //     }
+        if (element.test(origin)) return callback(null, true);
+      }
 
-  //     callback(new Error(`Not allowed by CORS: "${origin}"`));
-  //   },
-  //   optionsSuccessStatus: 200
-  // },
+      callback(new Error(`Not allowed by CORS: "${origin}"`));
+    },
+    optionsSuccessStatus: 200
+  },
 
   jwtOptions: {
     expiresIn: '7d'

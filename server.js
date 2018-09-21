@@ -1,6 +1,6 @@
 const Express = require('express');
 require('express-async-errors');
-// const Cors = require('cors');
+const Cors = require('cors');
 const BodyParser = require('body-parser');
 const MethodOverride = require('method-override');
 const Boom = require('express-boom');
@@ -43,8 +43,8 @@ const promiseApp = async () => {
     app.use(BearerToken(Config.bearerOptions));
     app.use(Boom());
 
-    // app.use(Cors(Config.cors));
-    // app.options('*', Cors(Config.cors));
+    app.use(Cors(Config.cors));
+    app.options('*', Cors(Config.cors));
 
     app.use(UserTokenMiddleware());
     app.use('/', RenderRouter);
