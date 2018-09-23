@@ -1,6 +1,6 @@
 const path = require('path');
 
-module.exports = {
+const config = {
   isProduction: process.env.NODE_ENV === 'production',
   isDebug: !this.isProduction,
 
@@ -66,3 +66,9 @@ module.exports = {
     }
   }
 };
+
+if (process.env.NODE_ENV === 'production') {
+  config.siteUrl = 'https://zagnut-ui/';
+}
+
+module.exports = config;
