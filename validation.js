@@ -39,11 +39,16 @@ const VerifySchema = {
 const ForgotPasswordSchema = {
   email: Joi.string().email().required().label('Email')
 };
-
+const ChangePasswordSchema = {
+  token: Joi.string().required().label('token'),
+  password: Joi.string().required().label('Password'),
+  confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
+};
 module.exports = {
   validate: validate,
   LoginSchema,
   RegisterSchema,
   VerifySchema,
-  ForgotPasswordSchema
+  ForgotPasswordSchema,
+  ChangePasswordSchema
 };

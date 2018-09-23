@@ -6,7 +6,7 @@ const Handlebars = require('nodemailer-express-handlebars');
 
 const Config = require('../config');
 
-const { validate, LoginSchema, RegisterSchema, ForgotPasswordSchema } = require('../validation');
+const { validate, LoginSchema, RegisterSchema, ForgotPasswordSchema, ChangePasswordSchema } = require('../validation');
 
 const User = require('../models/user');
 
@@ -83,10 +83,11 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   res.json({ userId: user.id, success: true });
 });
 
-router.post('/changepassword', async(req, res) => {
+router.post('/changepassword', validate(ChangePasswordSchema), async(req, res) => {
   const token = req.body.token;
   const password = req.body.password;
   const confirmation = req.body.confirmation;
+  console.log(token);
   let user = await User.resetPassword(token, password, confirmation);
   res.json({ userId: user.id, success: true });
 });

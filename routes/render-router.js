@@ -4,7 +4,7 @@ const User = require('../models/user');
 
 const router = Express.Router();
 
-router.get('/verify', async(req, res) => {
+router.get('/verify' async(req, res) => {
   const token = req.query.token;
 
   const validated = User.validateToken(token);
