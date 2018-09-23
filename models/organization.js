@@ -10,17 +10,12 @@ const Organization = ModelBase.extend({
   // Association
 
   users() {
-    return this.belongsToMany(User, 'users_organizations_roles', 'organization_id', 'user_id');
+    return this.belongsTo(User, 'users_organizations_roles', 'organization_id', 'user_id');
   },
 
   roles() {
     return this.belongsToMany(Role, 'users_organizations_roles', 'organization_id', 'role_id');
   }
-
-  // Instance methods
-
-}, {
-  // Static methods
 });
 
 module.exports = Bookshelf.model('Organization', Organization);
