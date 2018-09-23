@@ -22,4 +22,23 @@ router.post('/switch/:organizationId', middlewares.LoginRequired, async (req, re
   return res.json({ success: true, organization, token });
 });
 
+router.get('/users/:organizationId', middlewares.LoginRequired, async (req, res) => {
+  const organizationId = parseInt(req.params.organizationId);
+  console.log(organizationId);
+  const organization = await Organization.where({ 'id': organizationId }).fetch({ withRelated: ['users.roles'] });
+  console.log(organization);
+  // var user = organization.related('users').map(us => {
+  //   const role = us.related('roles').first();
+
+  //   return {
+  //     id: us.get('id'),
+  //     name: us.get('name'),
+  //     role_id: role && role.get('id'),
+  //     role: role && role.get('role')
+  //   };
+  // });
+
+  res.json({ success: true, organization });
+});
+
 module.exports = router;

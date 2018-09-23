@@ -15,7 +15,7 @@ router.post('/', middlewares.LoginRequired, async(req, res) => {
 });
 
 router.get('/orgs', middlewares.LoginRequired, async(req, res) => {
-  const user = await User.where({'id': req.user.get('id')}).fetch({withRelated: ['organizations.roles']});
+  const user = await User.where({ 'id': req.user.get('id') }).fetch({ withRelated: ['organizations.roles'] });
 
   var organizations = user.related('organizations').map(org => {
     const role = org.related('roles').first();
