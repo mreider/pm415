@@ -1,6 +1,5 @@
 const Crypto = require('crypto');
 const Jwt = require('jsonwebtoken');
-const OmitDeep = require('omit-deep');
 
 const ModelBase = require('../db').modelBase;
 
@@ -57,11 +56,6 @@ const User = ModelBase.extend({
       const jwtOptions = Object.assign({}, Config.jwtOptions, opts);
       resolve(Jwt.sign(data, Config.appKey, jwtOptions));
     });
-  },
-
-  toObject() {
-    const serialized = OmitDeep(this.toJSON(), ['password', 'isActive', 'confirmedAt', 'createdAt', 'updatedAt']);
-    return serialized;
   }
 }, {
   // Static methods
