@@ -3,6 +3,7 @@ const OmitDeep = require('omit-deep');
 module.exports = exports = {};
 
 exports.serialize = function(obj) {
+  if (!obj) return undefined;
   if (typeof obj.toJSON === 'function') obj = obj.toJSON();
 
   const serialized = OmitDeep(obj, [
