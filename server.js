@@ -1,3 +1,4 @@
+const Path = require('path');
 const Express = require('express');
 require('express-async-errors');
 const Cors = require('cors');
@@ -7,6 +8,7 @@ const Boom = require('express-boom');
 const BearerToken = require('express-bearer-token');
 const Http = require('http');
 const Https = require('https');
+const History = require('connect-history-api-fallback');
 const Logger = require('./logger');
 const Config = require('./config');
 const RenderRouter = require('./routes/render-router');
@@ -54,6 +56,14 @@ const promiseApp = async () => {
     app.use('/api/org', OrgRouter);
 
     app.use(ErrorHandler);
+
+    const staticFileMiddleware = Express.static(Path.join(__dirname, 'dist'));
+    app.use(staticFileMiddleware);
+    app.use(History({
+      disableDotRule: true,
+      verbose: true
+    }));
+    app.use(staticFileMiddleware);
 
     resolve(app);
   });
