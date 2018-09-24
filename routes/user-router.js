@@ -5,17 +5,33 @@ const router = Express.Router();
 
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
+const uuidv4 = require('uuid/v4');
 
-router.get('/', middlewares.LoginRequired, function(req, res) {
+const { validate, UpdateUserSchema } = require('../validation');
+router.use(middlewares.LoginRequired);
+
+router.get('/', function(req, res) {
   res.json({ success: true, user: Utils.serialize(req.user), organization: Utils.serialize(req.organization) });
 });
 
-router.post('/', middlewares.LoginRequired, async(req, res) => {
-  let user = await User.updateUser(req.body.email, req.body.password, req.body.lastName, req.body.lastName, req.body.id);
-  res.json({ userId: user.id, success: true });
+router.get('/apikey', function(req, res) {
+  const apikey = Utils.serialize(req.user).apiKey;
+  res.json({ success: true, apikey: apikey });
 });
 
-router.get('/orgs', middlewares.LoginRequired, async(req, res) => {
+router.post('/apikey', async(req, res) => {
+  const apikey = uuidv4() + uuidv4();
+  const data = { apiKey: apikey };
+  try {
+    req.user.set(data);
+    await req.user.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.json({ success: false });
+  }
+});
+
+router.get('/orgs', async(req, res) => {
   var organizations = req.user.related('organizations').map(org => {
     const role = org.related('roles').first();
 
@@ -28,6 +44,24 @@ router.get('/orgs', middlewares.LoginRequired, async(req, res) => {
   });
 
   res.json({ success: true, organizations });
+});
+
+router.put('/', validate(UpdateUserSchema), async(req, res) => {
+  const data = {};
+  if (req.body.hasOwnProperty('password')) {
+    const hash = await User.hashPassword(req.body.password);
+    data.password = hash;
+  };
+  if (req.body.hasOwnProperty('firstName')) { data.firstName = req.body.firstName; };
+  if (req.body.hasOwnProperty('lastName')) { data.lastName = req.body.lastName; };
+  if (req.body.hasOwnProperty('email')) { data.email = req.body.email; };
+  try {
+    req.user.set(data);
+    await req.user.save();
+    res.json({ success: true, user: req.user });
+  } catch (error) {
+    res.json({ success: false, user: req.user });
+  }
 });
 
 module.exports = router;

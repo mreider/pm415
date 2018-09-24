@@ -12,7 +12,7 @@ module.exports = {
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
 
-        const user = await User.where({'id': decoded.userId}).fetch({withRelated: ['organizations.roles']});
+        const user = await User.where({ 'id': decoded.userId }).fetch({ withRelated: ['organizations.roles'] });
 
         req.user = user;
         req.organization = user.related('organizations').filter(org => org.get('id') === decoded.organizationId)[0];
