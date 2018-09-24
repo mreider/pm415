@@ -68,7 +68,7 @@ const config = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  config.siteUrl = 'https://zagnut-ui/';
+  config.siteUrl = 'https://zagnut.herokuapp.com/';
 }
 
 module.exports = config;
