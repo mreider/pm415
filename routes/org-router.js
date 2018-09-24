@@ -11,11 +11,10 @@ router.get('/', middlewares.LoginRequired, function (req, res) {
 
 router.post('/switch/:organizationId', middlewares.LoginRequired, async (req, res) => {
   const organizationId = parseInt(req.params.organizationId);
-  const organization = await Organization.where({ id: organizationId }).fetch();
+
+  const organization = req.user.related('organizations').filter(o => o.get('id') === organizationId)[0];
 
   if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization with ID ${organizationId} not found.` });
-
-  // TODO: Check that user belongs to this organization and return his role/status too
 
   const token = await req.user.generateToken({}, { organizationId });
 
