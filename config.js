@@ -12,7 +12,7 @@ const config = {
   port: process.env.PORT || 3000,
 
   db: {
-    databaseUri: process.env.CLEARDB_DATABASE_URL,
+    databaseUri: process.env.DATABASE_URL,
 
     options: {
       operatorsAliases: false,
