@@ -8,7 +8,10 @@ const Roles = ModelBase.extend({
 
   // Instance methods
 
-}, {
+},
+{
+  AdminRole: 'Admin',
+  AdminRoleId: '1'
   // Static methods
 });
 

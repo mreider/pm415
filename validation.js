@@ -40,6 +40,9 @@ const VerifySchema = {
 const ForgotPasswordSchema = {
   email: Joi.string().email().required().label('Email')
 };
+const NewOrganizationSchema = {
+  name: Joi.string().min(2).required().label('Name')
+};
 const ChangePasswordSchema = {
   token: Joi.string().required().label('token'),
   password: Joi.string().required().label('Password'),
@@ -59,5 +62,6 @@ module.exports = {
   VerifySchema,
   ForgotPasswordSchema,
   ChangePasswordSchema,
-  UpdateUserSchema
+  UpdateUserSchema,
+  NewOrganizationSchema
 };

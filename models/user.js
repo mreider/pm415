@@ -60,7 +60,7 @@ const User = ModelBase.extend({
 }, {
   // Static methods
 
-  AdminRole: 'admin',
+  AdminRole: 'Admin',
 
   async hashPassword(password, salt) {
     return new Promise((resolve, reject) => {
