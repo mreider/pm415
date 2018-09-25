@@ -147,26 +147,6 @@ const User = ModelBase.extend({
     });
   },
 
-  updateUser(email, password, firstName, lastName, id) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const user = await User.findById(id);
-        if (!user) return reject(new Error('User not found'));
-        let data = {};
-        const hash = await this.hashPassword(password);
-        if (password) data.password = hash;
-        if (email) data.email = email;
-        if (firstName) data.firstName = firstName;
-        if (lastName) data.lastName = lastName;
-        user.set(data);
-        await user.save();
-        resolve(user);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  },
-
   async create(email, password, firstName, lastName, organization) {
     const hash = await this.hashPassword(password);
     return User.forge({ email, password: hash, firstName, lastName }).save();

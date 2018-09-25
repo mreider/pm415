@@ -9,7 +9,7 @@ exports.up = function(knex, Promise) {
     is_active         TINYINT(1)    DEFAULT '0',
     confirmed_at      DATETIME      DEFAULT NULL,
     created_at        DATETIME      NOT NULL      DEFAULT CURRENT_TIMESTAMP,
-    updated_at        DATETIME      NOT NULL      DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME      NOT NULL      DEFAULT CURRENT_TIMESTAMP,      
     PRIMARY KEY (id)
   );`);
 };
