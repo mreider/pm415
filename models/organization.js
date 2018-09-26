@@ -11,7 +11,7 @@ const Organization = ModelBase.extend({
   // Association
 
   users() {
-    return this.belongsTo(User, 'users_organizations_roles', 'organization_id', 'user_id');
+    return this.belongsToMany(User, 'users_organizations_roles', 'organization_id', 'user_id');
   },
 
   roles() {

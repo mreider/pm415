@@ -12,5 +12,6 @@ const modelBase = require('bookshelf-modelbase')(bookshelf);
 
 module.exports = {
   bookshelf,
-  modelBase
+  modelBase,
+  knex
 };

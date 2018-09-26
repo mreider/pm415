@@ -30,7 +30,7 @@ module.exports = {
     }
 
     if (!req.user.get('isActive') || !req.user.get('confirmedAt')) {
-      return res.boom.forbidden('User not confirmed or inactive', { uccess: false });
+      return res.boom.forbidden('User not confirmed or inactive', { success: false });
     }
 
     next(null);

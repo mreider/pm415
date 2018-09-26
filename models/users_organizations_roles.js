@@ -14,7 +14,7 @@ const UORoles = ModelBase.extend({
   },
 
   roles() {
-    return this.belongsToMany(Role, 'roles', 'id', 'role_id');
+    return this.belongsToMany(Role, 'users_organizations_roles', 'role_id');
   },
 
   organizations() {
