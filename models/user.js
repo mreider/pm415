@@ -13,6 +13,7 @@ const PasswordLength = 128;
 const SaltLen = 16;
 const Iterations = 10000;
 const Digest = 'sha512';
+const UORoles = require('./users_organizations_roles');
 
 const User = ModelBase.extend({
   tableName: 'users',
@@ -61,6 +62,7 @@ const User = ModelBase.extend({
   // Static methods
 
   AdminRole: 'Admin',
+  PendingRole: 'Pending',
 
   async hashPassword(password, salt) {
     return new Promise((resolve, reject) => {
@@ -74,6 +76,11 @@ const User = ModelBase.extend({
         resolve([salt, Iterations.toString(), hash.toString('hex')].join('.'));
       });
     });
+  },
+
+  async Role(userId, orgId) {
+    const hasRole = await UORoles.where({ user_id: userId, organization_id: orgId }).fetch();
+    return hasRole;
   },
 
   validateToken(token) {

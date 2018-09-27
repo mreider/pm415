@@ -3,6 +3,8 @@ const Jwt = require('jsonwebtoken');
 const Url = require('url');
 const Config = require('./config');
 const User = require('./models/user');
+const Utils = require('./utils');
+const Role = require('./models/role');
 
 module.exports = {
   UserTokenMiddleware: () => {
@@ -16,7 +18,8 @@ module.exports = {
 
         req.user = user;
         req.organization = user.related('organizations').filter(org => org.get('id') === decoded.organizationId)[0];
-
+        const role = await User.Role(decoded.userId, decoded.organizationId);
+        if (role) req.roleId = Utils.serialize(role).roleId;
         next(null);
       } catch (error) {
         next(null);
@@ -52,9 +55,9 @@ module.exports = {
     }
 
     // TODO: Add role in organization check here instead of user role check
-    // if (!req.user.hasRole(User.AdminRole)) {
-    //   return res.boom.unauthorized('Admin privileges required', {success: false, redirect: '/login?next=' + redirect});
-    // }
+    if (req.roleId != Role.AdminRoleId) {
+      return res.boom.unauthorized('Admin privileges required', { success: false, redirect: '/login?next=' + redirect });
+    }
 
     next(null);
   }

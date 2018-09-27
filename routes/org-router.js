@@ -12,6 +12,7 @@ const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
 const { validate, NewOrganizationSchema, InviteLingSchema } = require('../validation');
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
+const knex = require('../db').knex;
 
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
 
@@ -38,7 +39,7 @@ router.post('/switch/:organizationId', async (req, res) => {
 
   const organization = req.user.related('organizations').filter(o => o.get('id') === organizationId)[0];
 
-  if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization with ID ${organizationId} not found.` });
+  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with ID ${organizationId} not found.` });
 
   const token = await req.user.generateToken({}, { organizationId });
 
@@ -47,26 +48,20 @@ router.post('/switch/:organizationId', async (req, res) => {
 
 router.get('/users/:organizationId', async (req, res) => {
   const organizationId = parseInt(req.params.organizationId);
-  // const UO = await UORole.where({ organization_id: organizationId }).fetchAll({ withRelated: ['roles'] });
-  // console.log(UO.related('roles').fetch().toJSON());
-  // var userid = UO.related('roles').fetchAll().map(async (us) => {
-  //   console.log(us);
-  // });
-
-  // );
-  // var user = organization.related('users').map(us => {
-  //   const role = us.related('roles').first();
-
-  //   return {
-  //     id: us.get('id'),
-  //     name: us.get('name'),
-  //     role_id: role && role.get('id'),
-  //     role: role && role.get('role')
-  //   };
-  // });
-  const organization = await Organization.where({ id: organizationId }).fetch({ withRelated: ['roles'] });
-
-  res.json({ success: true, organization });
+  let users = await knex('users_organizations_roles').select(
+    'users.id',
+    'users.email',
+    'roles.role',
+    'users.first_name',
+    'users.last_name',
+    'users.is_active',
+    'users.confirmed_at',
+    'users.created_at',
+    'users.updated_at',
+    'users.api_key').leftJoin(
+    'roles', 'users_organizations_roles.role_id', 'roles.id').leftJoin(
+    'users', 'users_organizations_roles.user_id', 'users.id').where({ organization_id: organizationId });
+  res.json({ success: true, users });
 });
 
 router.post('/new', validate(NewOrganizationSchema), async (req, res) => {

@@ -11,7 +11,11 @@ const Roles = ModelBase.extend({
 },
 {
   AdminRole: 'Admin',
-  AdminRoleId: '1'
+  AdminRoleId: '2',
+  MemberRole: 'Member',
+  MemberRoleId: '1',
+  PendingRole: 'Pending',
+  PendingRoleId: '3'
   // Static methods
 });
 
