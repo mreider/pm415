@@ -10,6 +10,8 @@ const Utils = require('../utils');
 const { validate, LoginSchema, RegisterSchema, ForgotPasswordSchema, ChangePasswordSchema } = require('../validation');
 
 const User = require('../models/user');
+const Role = require('../models/role');
+const UORole = require('../models/users_organizations_roles');
 
 const router = Express.Router();
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
@@ -67,7 +69,9 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   if (password !== confirmation) return res.boom.conflict('Not confirmed password', { success: false, message: `Password and confirmation doesn't match` });
 
   user = await User.create(email, password, firstName, lastName, organization);
-
+  if (organization) {
+    await UORole.create({ user_id: user.id, organization_id: organization, role_id: Role.PendingRoleId });
+  };
   const token = await user.generateToken({ expiresIn: '1d' });
 
   var mail = {

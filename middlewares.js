@@ -10,16 +10,16 @@ module.exports = {
   UserTokenMiddleware: () => {
     return async (req, res, next) => {
       if (!req.token) return next(null);
-
+      req.roleId = 0;
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
 
         const user = await User.where({ 'id': decoded.userId }).fetch({ withRelated: ['organizations.roles'] });
-
         req.user = user;
         req.organization = user.related('organizations').filter(org => org.get('id') === decoded.organizationId)[0];
         const role = await User.Role(decoded.userId, decoded.organizationId);
         if (role) req.roleId = Utils.serialize(role).roleId;
+        if (!role) req.roleId = 0;
         next(null);
       } catch (error) {
         next(null);

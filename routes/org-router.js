@@ -80,7 +80,7 @@ router.post('/invitelink', validate(InviteLingSchema), async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
   let organization = await Organization.where({ name }).fetch();
-  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with the name ${email} was not found` });
+  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with the name ${name} was not found` });
   let user = await User.where({ email }).fetch();
   if (user) {
     let uorole = await UORole.where({ user_id: user.id, organization_id: organization.id });
