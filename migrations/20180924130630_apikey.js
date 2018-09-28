@@ -6,4 +6,8 @@ exports.up = async function(knex) {
   `);
 };
 exports.down = function(knex, Promise) {
+  return knex.raw(`
+     ALTER TABLE users
+    DROP COLUMN api_key;
+  `);
 };
