@@ -10,7 +10,7 @@ const Config = require('../config');
 const Nodemailer = require('nodemailer');
 const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
-const { validate, NewOrganizationSchema, InviteLingSchema } = require('../validation');
+const { validate, NewOrganizationSchema, InviteLinkSchema } = require('../validation');
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
 const knex = require('../db').knex;
 
@@ -76,7 +76,7 @@ router.post('/new', validate(NewOrganizationSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user });
 });
 
-router.post('/invitelink', validate(InviteLingSchema), async (req, res) => {
+router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
   let organization = await Organization.where({ name }).fetch();

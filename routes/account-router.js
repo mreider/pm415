@@ -72,7 +72,9 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   if (organization) {
     await UORole.create({ user_id: user.id, organization_id: organization, role_id: Role.PendingRoleId });
   };
-  const token = await user.generateToken({ expiresIn: '1d' });
+  let data = {};
+  if (organization) data.organization = organization;
+  const token = await user.generateToken({ expiresIn: '1d' }, data);
 
   var mail = {
     from: Config.mailerConfig.from,
