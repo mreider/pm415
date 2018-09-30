@@ -102,4 +102,55 @@ router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user, token });
 });
 
+router.post('/delete/users', middlewares.OrgAdminRequired, async (req, res) => {
+  const usersId = req.body.usersid;
+  const organizationId = req.organization.id;
+  const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
+  await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).destroy();
+  return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
+});
+
+router.post('/resetpassword/users', middlewares.OrgAdminRequired, async (req, res) => {
+  const usersId = req.body.usersid;
+  const users = await User.where('id', 'in', usersId).fetchAll();
+  await users.forEach(newPasswordAndSendMail);
+  return res.json({ success: true, users });
+});
+
+router.post('/changerole/users', middlewares.OrgAdminRequired, async (req, res) => {
+  const organizationId = parseInt(req.organization.id);
+  const usersId = req.body.usersid;
+  const roleId = req.body.roleid;
+  let users = await knex('users_organizations_roles')
+    .where({ organization_id: organizationId })
+    .where('user_id', 'in', usersId)
+    .update('role_id', roleId);
+  res.json({ success: true, users });
+});
+
+function newPasswordAndSendMail(user) {
+  return new Promise(async (resolve, reject) => {
+    const randomstring = Math.random().toString(36).slice(-8);
+    try {
+      const hash = await User.hashPassword(randomstring);
+      user.set({ password: hash });
+      await user.save();
+
+      var mail = {
+        from: Config.mailerConfig.from,
+        to: user.get('email'),
+        subject: 'Password reset',
+        template: 'admin-change-password',
+        context: {
+          newpassword: randomstring
+        }
+      };
+      mailer.sendMail(mail);
+
+      resolve(user);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 module.exports = router;
