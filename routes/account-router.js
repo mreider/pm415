@@ -47,7 +47,7 @@ router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) 
     subject: 'Password recovery',
     template: 'forgotpassword-verification',
     context: {
-      confirm_url: Config.siteUrl + 'forgotpassword/?token=' + token
+      confirm_url: Config.siteUrl + 'reset-password/?token=' + token
     }
   };
 
@@ -94,9 +94,8 @@ router.post('/changepassword', validate(ChangePasswordSchema), async(req, res) =
   const token = req.body.token;
   const password = req.body.password;
   const confirmation = req.body.confirmation;
-  console.log(token);
   let user = await User.resetPassword(token, password, confirmation);
-  res.json({ userId: user.id, success: true });
+  res.json({ userId: user.id, success: true, message: 'New password saved' });
 });
 
 module.exports = router;

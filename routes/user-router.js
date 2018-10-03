@@ -25,7 +25,7 @@ router.post('/apikey', async(req, res) => {
   try {
     req.user.set(data);
     await req.user.save();
-    res.json({ success: true });
+    res.json({ success: true, apikey });
   } catch (error) {
     res.json({ success: false });
   }

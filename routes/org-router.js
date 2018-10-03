@@ -10,7 +10,7 @@ const Config = require('../config');
 const Nodemailer = require('nodemailer');
 const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
-const { validate, NewOrganizationSchema, InviteLinkSchema } = require('../validation');
+const { validate, NewOrganizationSchema, InviteLinkSchema, DeleteOrgSchema } = require('../validation');
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
 const knex = require('../db').knex;
 
@@ -108,6 +108,18 @@ router.post('/delete/users', middlewares.OrgAdminRequired, async (req, res) => {
   const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
   await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).destroy();
   return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
+});
+
+router.post('/delete',validate(DeleteOrgSchema), async (req, res) => {
+  const userId = req.body.userid;
+  const organizationId = req.body.orgid;
+  const admin = await UORole.where({ organization_id: organizationId, user_id: userId, role_id: Role.AdminRoleId }).fetch();
+  const organization = await Organization.where({ id: organizationId }).fetch();
+  if (organization && !admin) return res.json({ success: false, message: 'Only the administrator of this organization can delete this organization.' });
+  if (!admin && !organization) return res.json({ success: false, message: 'Organization not found.' });
+  await UORole.where({ organization_id: organizationId }).destroy();
+  await Organization.where({ id: organizationId }).destroy();
+  return res.json({ success: true, message: 'Deleted' });
 });
 
 router.post('/resetpassword/users', middlewares.OrgAdminRequired, async (req, res) => {
