@@ -5,7 +5,7 @@ Agile Product Management Software
 
 PM415 is an open source agile product management tool for product managers, and stakeholders, to strategize, prioritize, and implement agile software initiatives.
 
-The project is a work in progress. We expect to be finished sometime in 2018. You can read the original specification[here](https://docs.google.com/document/d/1qzyaIZrmZrHYXqvUXQiCPW2eyldHfv0tzkH92gdFEgQ/edit).
+The project is a work in progress. We expect to be finished sometime in 2018. You can read the original specification [here](https://docs.google.com/document/d/1qzyaIZrmZrHYXqvUXQiCPW2eyldHfv0tzkH92gdFEgQ/edit).
 
 ## Installation
 
