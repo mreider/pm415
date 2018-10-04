@@ -43,6 +43,10 @@ const ForgotPasswordSchema = {
 const NewOrganizationSchema = {
   name: Joi.string().min(2).required().label('Name')
 };
+const UpdateOrganizationSchema = {
+  name: Joi.string().min(2).required().label('Name'),
+  orgid: Joi.string().required().label('orgid')
+};
 const InviteLinkSchema = {
   name: Joi.string().min(2).required().label('Name'),
   email: Joi.string().email().required().label('Email')
@@ -73,5 +77,6 @@ module.exports = {
   UpdateUserSchema,
   NewOrganizationSchema,
   InviteLinkSchema,
-  DeleteOrgSchema
+  DeleteOrgSchema,
+  UpdateOrganizationSchema
 };
