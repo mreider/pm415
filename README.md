@@ -62,15 +62,9 @@ export SENDGRID_PASSWORD=your-password
 
 Now restart your server `sudo reboot now`
 
-### Fork this repo
+### Clone this repo
 
-1. Fork the [pm415](https://github.com/mreider/pm415) repo to your personal GitHub account.
-2. Clone the repository to your ubuntu machine 
-`git clone git@github.com:(your account)/pm415.git`
-3. Optionally checkout a new branch for changes you want to make 
-`git checkout -b <your_branch_name>`
-4. Add a new remote for your local repository
-`git remote add github <your_repository_ssh_url>`
+`git clone git@github.com:mreider/pm415.git`
 
 ### Install dependencies
 
