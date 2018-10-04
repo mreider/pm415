@@ -47,7 +47,7 @@ setcap 'cap_net_bind_service=+ep' /home/foo/.nvm/versions/node/v10.11.0/bin/node
 ### Edit environment file
 
 ```
-sudo nano environment
+sudo nano /etc/environment
 ```
 
 Now paste the following environment variables declarations in the file:
@@ -117,6 +117,44 @@ pm2 start server.js --name pm415
 ```
 
 Now you should be able to browse the pm415 app at http://your-domain!
+
+### Run using SSL and Caddy
+
+Install Caddy 
+
+```
+curl https://getcaddy.com | bash -s personal
+```
+
+### Create a caddy file to proxy pm415
+
+```
+nano Caddyfile
+```
+
+The file contents are:
+
+```
+your-site.com {
+        tls email@email.com
+        gzip
+        proxy / localhost:3000 {
+                transparent
+                websocket
+        }
+}
+```
+
+Now modify your /etc/environment file to use port 3000 instead of port 80.
+
+Finally, you can start the Caddy server using nohup as follows:
+
+```
+nohup sudo caddy -conf Caddyfile > caddy.out 2> caddy.err < /dev/null &
+
+```
+
+Now you can browse your site using ssl.
 
 
 
