@@ -10,7 +10,7 @@ const Config = require('../config');
 const Nodemailer = require('nodemailer');
 const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
-const { validate, NewOrganizationSchema, InviteLinkSchema, DeleteOrgSchema } = require('../validation');
+const { validate, NewOrganizationSchema, InviteLinkSchema, DeleteOrgSchema, UpdateOrganizationSchema } = require('../validation');
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
 const knex = require('../db').knex;
 
@@ -102,7 +102,7 @@ router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user, token });
 });
 
-router.post('/delete/users', middlewares.OrgAdminRequired, async (req, res) => {
+router.post('/delete/users', async (req, res) => {
   const usersId = req.body.usersid;
   const organizationId = req.organization.id;
   const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
@@ -110,7 +110,22 @@ router.post('/delete/users', middlewares.OrgAdminRequired, async (req, res) => {
   return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
 });
 
-router.post('/delete',validate(DeleteOrgSchema), async (req, res) => {
+// admin routes
+router.use(middlewares.OrgAdminRequired);
+// admin routes
+
+router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {
+  const name = req.body.name;
+  const id = req.body.orgid;
+  let organization = await Organization.where({ id }).fetch();
+  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with id ${id} not found` });
+  await knex('organizations')
+    .where({ id: id })
+    .update('name', name);
+  return res.json({ success: true, organization });
+});
+
+router.post('/delete', validate(DeleteOrgSchema), async (req, res) => {
   const userId = req.body.userid;
   const organizationId = req.body.orgid;
   const admin = await UORole.where({ organization_id: organizationId, user_id: userId, role_id: Role.AdminRoleId }).fetch();
@@ -122,14 +137,14 @@ router.post('/delete',validate(DeleteOrgSchema), async (req, res) => {
   return res.json({ success: true, message: 'Deleted' });
 });
 
-router.post('/resetpassword/users', middlewares.OrgAdminRequired, async (req, res) => {
+router.post('/resetpassword/users', async (req, res) => {
   const usersId = req.body.usersid;
   const users = await User.where('id', 'in', usersId).fetchAll();
   await users.forEach(newPasswordAndSendMail);
   return res.json({ success: true, users });
 });
 
-router.post('/changerole/users', middlewares.OrgAdminRequired, async (req, res) => {
+router.post('/changerole/users', async (req, res) => {
   const organizationId = parseInt(req.organization.id);
   const usersId = req.body.usersid;
   const roleId = req.body.roleid;
