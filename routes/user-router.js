@@ -5,7 +5,7 @@ const router = Express.Router();
 
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
-const uuidv4 = require('uuid/v4');
+const UUID = require('uuid/v4');
 
 const { validate, UpdateUserSchema } = require('../validation');
 router.use(middlewares.LoginRequired);
@@ -20,15 +20,11 @@ router.get('/apikey', function(req, res) {
 });
 
 router.post('/apikey', async(req, res) => {
-  const apikey = uuidv4() + uuidv4();
-  const data = { apiKey: apikey };
-  try {
-    req.user.set(data);
-    await req.user.save();
-    res.json({ success: true, apikey });
-  } catch (error) {
-    res.json({ success: false });
-  }
+  const apiKey = UUID() + UUID();
+  req.user.set({ apiKey });
+  await req.user.save();
+
+  res.json({ success: true, apiKey });
 });
 
 router.get('/orgs', async(req, res) => {
@@ -47,21 +43,15 @@ router.get('/orgs', async(req, res) => {
 });
 
 router.put('/', validate(UpdateUserSchema), async(req, res) => {
-  const data = {};
-  if (req.body.hasOwnProperty('password')) {
-    const hash = await User.hashPassword(req.body.password);
-    data.password = hash;
-  };
-  if (req.body.hasOwnProperty('firstName')) { data.firstName = req.body.firstName; };
-  if (req.body.hasOwnProperty('lastName')) { data.lastName = req.body.lastName; };
-  if (req.body.hasOwnProperty('email')) { data.email = req.body.email; };
-  try {
-    req.user.set(data);
-    await req.user.save();
-    res.json({ success: true, user: req.user });
-  } catch (error) {
-    res.json({ success: false, user: req.user });
-  }
+  req.user.set({
+    password: await User.hashPassword(req.body.password),
+    email: req.body.email,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName
+  });
+  await req.user.save();
+
+  res.json({ success: true, user: req.user });
 });
 
 module.exports = router;
