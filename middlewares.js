@@ -13,7 +13,6 @@ module.exports = {
       req.roleId = 0;
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
-
         const user = await User.where({ 'id': decoded.userId }).fetch({ withRelated: ['organizations.roles'] });
         req.user = user;
         req.organization = user.related('organizations').filter(org => org.get('id') === decoded.organizationId)[0];
@@ -54,7 +53,7 @@ module.exports = {
       return res.boom.forbidden('User must be assigned to organization first', { success: false });
     }
     // TODO: Add role in organization check here instead of user role check
-    if (req.roleId != Role.AdminRoleId) {
+    if (req.roleId !== Role.AdminRoleId) {
       return res.boom.unauthorized('Admin privileges required', { success: false, redirect: '/login?next=' + redirect });
     }
 

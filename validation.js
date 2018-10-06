@@ -26,7 +26,7 @@ const LoginSchema = {
 
 const RegisterSchema = {
   email: Joi.string().email().required().label('Email'),
-  password: Joi.string().required().label('Password'),
+  password: Joi.string().min(4).required().label('Password'),
   firstName: Joi.string().required().label('First Name'),
   lastName: Joi.string().required().label('Last Name'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation'),
@@ -53,14 +53,14 @@ const InviteLinkSchema = {
 };
 const ChangePasswordSchema = {
   token: Joi.string().required().label('token'),
-  password: Joi.string().required().label('Password'),
+  password: Joi.string().required().min(4).label('Password'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
-// TODO: If route implemeted correctly one of fields here becomes unnecessary
-// const DeleteOrgSchema = {
-//   userid: Joi.string().required().label('userid'),
-//   organizationId: Joi.string().required().label('organizationId')
-// };
+// TODO: If route implemeted correctly one of fields here becomes unnecessary//
+const DeleteOrgSchema = {
+  userid: Joi.string().required().label('userid'),
+  organizationId: Joi.string().required().label('organizationId')
+};
 const UpdateUserSchema = {
   firstName: Joi.string().min(0).allow('').optional().label('Firstname'),
   lastName: Joi.string().optional().label('Lastname'),

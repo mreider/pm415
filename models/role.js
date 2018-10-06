@@ -15,7 +15,8 @@ const Roles = ModelBase.extend({
   MemberRole: 'Member',
   MemberRoleId: '1',
   PendingRole: 'Pending',
-  PendingRoleId: '3'
+  PendingRoleId: '3',
+  RolesObject: [ 'Deleted', 'Member', 'Admin', 'Pending' ]
   // Static methods
 });
 

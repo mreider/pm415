@@ -1,6 +1,6 @@
 const Express = require('express');
 const User = require('../models/user');
-
+const Role = require('../models/role');
 const router = Express.Router();
 
 const middlewares = require('../middlewares');
@@ -11,7 +11,7 @@ const { validate, UpdateUserSchema } = require('../validation');
 router.use(middlewares.LoginRequired);
 
 router.get('/', function(req, res) {
-  res.json({ success: true, user: Utils.serialize(req.user), organization: Utils.serialize(req.organization) });
+  res.json({ success: true, user: Utils.serialize(req.user), organization: Utils.serialize(req.organization), role: Role.RolesObject[req.roleId] });
 });
 
 router.get('/apikey', function(req, res) {

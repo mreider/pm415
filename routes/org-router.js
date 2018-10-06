@@ -36,7 +36,6 @@ router.get('/', function (req, res) {
 
 router.post('/switch/:organizationId', async (req, res) => {
   const organizationId = parseInt(req.params.organizationId);
-
   const organization = req.user.related('organizations').filter(o => o.get('id') === organizationId)[0];
 
   if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with ID ${organizationId} not found.` });
@@ -99,17 +98,18 @@ router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user, token });
 });
 
+// admin routes
+router.use(middlewares.OrgAdminRequired);
+// admin routes
+
 router.post('/delete/users', async (req, res) => {
   const usersId = req.body.usersid;
   const organizationId = req.organization.id;
   const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
+
   await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).destroy();
   return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
 });
-
-// admin routes
-router.use(middlewares.OrgAdminRequired);
-// admin routes
 
 router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {
   const name = req.body.name;
@@ -141,10 +141,21 @@ router.post('/resetpassword/users', async (req, res) => {
   return res.json({ success: true, users });
 });
 
-router.post('/changerole/users', async (req, res) => {
+router.post('/changerole/admin/users', async (req, res) => {
   const organizationId = parseInt(req.organization.id);
   const usersId = req.body.usersid;
-  const roleId = req.body.roleid;
+  const roleId = Role.AdminRoleId;
+  let users = await knex('users_organizations_roles')
+    .where({ organization_id: organizationId })
+    .where('user_id', 'in', usersId)
+    .update('role_id', roleId);
+  res.json({ success: true, users });
+});
+
+router.post('/changerole/member/users', async (req, res) => {
+  const organizationId = parseInt(req.organization.id);
+  const usersId = req.body.usersid;
+  const roleId = Role.MemberRoleId;
   let users = await knex('users_organizations_roles')
     .where({ organization_id: organizationId })
     .where('user_id', 'in', usersId)

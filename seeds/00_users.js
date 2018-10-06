@@ -24,6 +24,17 @@ exports.seed = function(knex, Promise) {
           confirmed_at: '2018-09-19 10:05:03.051',
           created_at: '2018-09-18 10:04:55.000',
           updated_at: '2018-09-20 10:04:55.000'
+        },
+	{
+          id: 3,
+          email: 'admin@admin.com',
+          password: '8f07230866710383.10000.cf6f79a1a2e451c79a1fbba1f8a7c70c64f9c670130851c865fdd24cabb983a0a33edb102a074ff5e88101c1c3000acbf0a18fd759fef2be5e5d1f0ebc740c0a80a35317d516a8724cb15d4459ceb579e118b9c70ad373369c2a40e567b88f1fdc010b1b993aa2f2a1f343c7a95eda9e06ce51a24e099e33875683888c34308c',
+          first_name: 'Matt',
+          last_name: 'Reider',
+          is_active: 1,
+          confirmed_at: '2018-09-19 10:05:03.051',
+          created_at: '2018-09-18 10:04:55.000',
+          updated_at: '2018-09-20 10:04:55.000'
         }
       ]);
     });
