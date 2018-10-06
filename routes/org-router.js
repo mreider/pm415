@@ -105,10 +105,13 @@ router.use(middlewares.OrgAdminRequired);
 router.post('/delete/users', async (req, res) => {
   const usersId = req.body.usersid;
   const organizationId = req.organization.id;
-  const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
-
-  await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).destroy();
-  return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
+  try {
+    const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
+    await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).destroy();
+    return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
+  } catch (error) {
+    return res.json({ success: false });
+  }
 });
 
 router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {

@@ -6,6 +6,7 @@ const router = Express.Router();
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
 const uuidv4 = require('uuid/v4');
+const knex = require('../db').knex;
 
 const { validate, UpdateUserSchema } = require('../validation');
 router.use(middlewares.LoginRequired);
@@ -32,17 +33,13 @@ router.post('/apikey', async(req, res) => {
 });
 
 router.get('/orgs', async(req, res) => {
-  var organizations = req.user.related('organizations').map(org => {
-    const role = org.related('roles').first();
-
-    return {
-      id: org.get('id'),
-      name: org.get('name'),
-      role_id: role && role.get('id'),
-      role: role && role.get('role')
-    };
-  });
-
+  let organizations = await knex('users_organizations_roles').select(
+    'roles.id as role_id',
+    'roles.role',
+    'organizations.name',
+    'organizations.id as id').leftJoin(
+    'roles', 'users_organizations_roles.role_id', 'roles.id').leftJoin(
+    'organizations', 'users_organizations_roles.organization_id', 'organizations.id').where({ user_id: req.user.id });
   res.json({ success: true, organizations });
 });
 

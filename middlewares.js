@@ -53,7 +53,7 @@ module.exports = {
       return res.boom.forbidden('User must be assigned to organization first', { success: false });
     }
     // TODO: Add role in organization check here instead of user role check
-    if (req.roleId !== Role.AdminRoleId) {
+    if (req.roleId != Role.AdminRoleId) {
       return res.boom.unauthorized('Admin privileges required', { success: false, redirect: '/login?next=' + redirect });
     }
 
