@@ -48,13 +48,13 @@ router.get('/orgs', async(req, res) => {
 
 router.put('/', validate(UpdateUserSchema), async(req, res) => {
   const data = {};
-  if (req.body.hasOwnProperty('password') && req.body.hasOwnProperty('confirmation') && req.body.password && req.body.confirmation) {
-    if (req.body.confirmation !== req.body.password) res.json({ success: false, message: 'Password and confirmation does not match' });
-    data.password = await User.hashPassword(req.body.password);
+  if (req.body.hasOwnProperty('password')) {
+    const hash = await User.hashPassword(req.body.password);
+    data.password = hash;
   };
-  data.firstName = req.body.firstName;
-  data.lastName = req.body.lastName;
-  data.email = req.body.email;
+  if (req.body.hasOwnProperty('firstName')) { data.firstName = req.body.firstName; };
+  if (req.body.hasOwnProperty('lastName')) { data.lastName = req.body.lastName; };
+  if (req.body.hasOwnProperty('email')) { data.email = req.body.email; };
   try {
     req.user.set(data);
     await req.user.save();

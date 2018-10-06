@@ -61,13 +61,14 @@ router.get('/users/:organizationId', async (req, res) => {
   res.json({ success: true, users });
 });
 
-router.put('/new', validate(NewOrganizationSchema), async (req, res) => {
+router.post('/new', validate(NewOrganizationSchema), async (req, res) => {
   const name = req.body.name;
   let organization = await Organization.where({ name }).fetch();
   if (organization) return res.boom.conflict('Exists', { success: false, message: `Organization with name ${name} already exists` });
   organization = await Organization.create({ name: name });
 
-  await UORole.create({ user_id: req.user.id, organization_id: organization.id, role_id: Role.AdminRoleId });
+  let alreadyAdmin = await UORole.where({ user_id: req.user.id, organization_id: organization.id, role_id: Role.AdminRoleId }).fetch(); // I do not know if it's right to keep the admin role id in the code
+  if (!alreadyAdmin) alreadyAdmin = await UORole.create({ user_id: req.user.id, organization_id: organization.id, role_id: Role.AdminRoleId });
 
   return res.json({ success: true, organization, user: req.user });
 });
@@ -98,11 +99,7 @@ router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user, token });
 });
 
-// admin routes
-router.use(middlewares.OrgAdminRequired);
-// admin routes
-
-router.delete('/delete/users', async (req, res) => {
+router.post('/delete/users', async (req, res) => {
   const usersId = req.body.usersid;
   const organizationId = req.organization.id;
   const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
@@ -110,7 +107,11 @@ router.delete('/delete/users', async (req, res) => {
   return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
 });
 
-router.put('/update', validate(UpdateOrganizationSchema), async (req, res) => {
+// admin routes
+router.use(middlewares.OrgAdminRequired);
+// admin routes
+
+router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {
   const name = req.body.name;
   const id = req.body.orgid;
   let organization = await Organization.where({ id }).fetch();
@@ -121,7 +122,7 @@ router.put('/update', validate(UpdateOrganizationSchema), async (req, res) => {
   return res.json({ success: true, organization });
 });
 
-router.delete('/delete', validate(DeleteOrgSchema), async (req, res) => {
+router.post('/delete', validate(DeleteOrgSchema), async (req, res) => {
   const userId = req.body.userid;
   const organizationId = req.body.orgid;
   const admin = await UORole.where({ organization_id: organizationId, user_id: userId, role_id: Role.AdminRoleId }).fetch();
@@ -133,14 +134,14 @@ router.delete('/delete', validate(DeleteOrgSchema), async (req, res) => {
   return res.json({ success: true, message: 'Deleted' });
 });
 
-router.put('/resetpassword/users', async (req, res) => {
+router.post('/resetpassword/users', async (req, res) => {
   const usersId = req.body.usersid;
   const users = await User.where('id', 'in', usersId).fetchAll();
   await users.forEach(newPasswordAndSendMail);
   return res.json({ success: true, users });
 });
 
-router.put('/changerole/users', async (req, res) => {
+router.post('/changerole/users', async (req, res) => {
   const organizationId = parseInt(req.organization.id);
   const usersId = req.body.usersid;
   const roleId = req.body.roleid;
