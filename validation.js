@@ -45,7 +45,7 @@ const NewOrganizationSchema = {
 };
 const UpdateOrganizationSchema = {
   name: Joi.string().min(2).required().label('Name'),
-  orgid: Joi.string().required().label('orgid')
+  organizationId: Joi.string().required().label('organizationId')
 };
 const InviteLinkSchema = {
   name: Joi.string().min(2).required().label('Name'),
@@ -56,16 +56,17 @@ const ChangePasswordSchema = {
   password: Joi.string().required().label('Password'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
-const DeleteOrgSchema = {
-  userid: Joi.string().required().label('userid'),
-  orgid: Joi.string().required().label('orgid')
-};
+// TODO: If route implemeted correctly one of fields here becomes unnecessary
+// const DeleteOrgSchema = {
+//   userid: Joi.string().required().label('userid'),
+//   organizationId: Joi.string().required().label('organizationId')
+// };
 const UpdateUserSchema = {
   firstName: Joi.string().min(0).allow('').optional().label('Firstname'),
   lastName: Joi.string().optional().label('Lastname'),
   email: Joi.string().required().label('Email'),
-  password: Joi.string().optional().label('Password'),
-  confirmation: Joi.string().optional().label('Confirmation')
+  password: Joi.string().required(),
+  confirmation: Joi.string().required()
 };
 module.exports = {
   validate: validate,

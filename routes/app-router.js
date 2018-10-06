@@ -9,7 +9,7 @@ router.get('/', function(req, res) {
   res.send('Wanna something?');
 });
 
-router.put('/orgs/autorize', middlewares.OrgAdminRequired, async (req, res) => {
+router.post('/orgs/autorize', middlewares.OrgAdminRequired, async (req, res) => {
   const usersId = req.body.ids;
   const orgid = req.body.orgid;
   const dataToUpdate = await UOrole.where('user_id', ' in ', usersId).where({ role_id: Role.PendingRoleId, organization_id: orgid }).fetchAll();

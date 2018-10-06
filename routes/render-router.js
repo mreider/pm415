@@ -12,7 +12,7 @@ const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig)
 const Utils = require('../utils');
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
 
-router.put('/verify', async (req, res) => {
+router.get('/verify', async (req, res) => {
   const token = req.query.token;
 
   const validated = User.validateToken(token);
@@ -26,8 +26,7 @@ router.put('/verify', async (req, res) => {
   if (validated.data.organization) {
     const uorole = await UORole.where('role_id', '<>', Role.PendingRoleId).where({ user_id: Number(validated.data.userId), organization_id: Number(validated.data.organization) }).fetch();
     if (uorole) return res.send('already confirmed');
-    let users = await knex('users_organizations_roles')
-      .select('u.email', 'o.name as organization')
+    let users = await knex('users_organizations_roles').select('u.email', 'o.name as organization')
       .leftJoin('users as u', 'users_organizations_roles.user_id', 'u.id')
       .leftJoin('organizations as o', 'users_organizations_roles.organization_id', 'o.id')
       .where({ organization_id: validated.data.organization, role_id: Role.AdminRoleId, 'is_active': 1 });
