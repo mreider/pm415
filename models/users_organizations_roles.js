@@ -26,7 +26,6 @@ const UORoles = ModelBase.extend({
 
   async getUser(userId) {
     const rows = await this.where({ user_id: userId }).fetchAll({withRelated: ['user', 'role', 'organization']});
-    console.log(rows);
 
     let user = null;
     const organizations = {};
