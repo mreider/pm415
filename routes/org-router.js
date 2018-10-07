@@ -13,6 +13,7 @@ const Handlebars = require('nodemailer-express-handlebars');
 const { validate, NewOrganizationSchema, InviteLinkSchema, DeleteOrgSchema, UpdateOrganizationSchema } = require('../validation');
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
 const knex = require('../db').knex;
+const Utils = require('../utils');
 
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
 
@@ -21,10 +22,12 @@ router.get('/invitelink', async (req, res) => {
 
   const validated = User.validateToken(token);
   if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, registration: 'false' });
-
+  let orgranization = await Organization.where({ id: validated.data.organization }).fetch();
+  if (!orgranization) return res.json({ success: false, registration: 'false' });
+  orgranization = Utils.serialize(orgranization);
   const user = await User.where({ email: validated.data.email }).fetch();
-  if (!user) return res.json({ success: true, registration: 'new', email: validated.data.email, organizationId: validated.data.organization });
-  res.json({ success: true, registration: 'add', email: validated.data.email, organizationId: validated.data.organization });
+  if (!user) return res.json({ success: true, registration: 'new', email: validated.data.email, organization_id: validated.data.organization, orgranization_name: orgranization.name });
+  res.json({ success: true, registration: 'add', email: validated.data.email, organization_id: validated.data.organization, orgranization_name: orgranization.name });
 });
 
 router.use(middlewares.LoginRequired);
@@ -75,6 +78,7 @@ router.post('/new', validate(NewOrganizationSchema), async (req, res) => {
 router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
+  const send = req.body.send;
   let organization = await Organization.where({ name }).fetch();
   if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with the name ${name} was not found` });
   let user = await User.where({ email }).fetch();
@@ -83,19 +87,20 @@ router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
     if (uorole) return res.boom.conflict('Exists', { success: false, message: `This user already have access to this organization ${email}, ${organization}` });
   };
   const token = await req.user.generateToken({ expiresIn: '1d' }, { email: email, organization: organization.id });
+  if (send === true) {
+    var mail = {
+      from: Config.mailerConfig.from,
+      to: email,
+      subject: 'invitelink',
+      template: 'invite-link-registration',
+      context: {
+        confirm_url: Config.siteUrl + 'invitelink/?token=' + token
+      }
+    };
 
-  var mail = {
-    from: Config.mailerConfig.from,
-    to: email,
-    subject: 'invitelink',
-    template: 'invite-link-registration',
-    context: {
-      confirm_url: Config.siteUrl + 'invitelink/?token=' + token
-    }
-  };
-
-  mailer.sendMail(mail);
-  return res.json({ success: true, organization, user: req.user, token });
+    mailer.sendMail(mail);
+  }
+  return res.json({ success: true, organization, user: req.user, token, confirm_url: Config.siteUrl + 'invitelink/?token=' + token });
 });
 
 // admin routes

@@ -25,10 +25,10 @@ exports.seed = function(knex, Promise) {
           created_at: '2018-09-18 10:04:55.000',
           updated_at: '2018-09-20 10:04:55.000'
         },
-	{
+        {
           id: 3,
           email: 'admin@admin.com',
-          password: '8f07230866710383.10000.cf6f79a1a2e451c79a1fbba1f8a7c70c64f9c670130851c865fdd24cabb983a0a33edb102a074ff5e88101c1c3000acbf0a18fd759fef2be5e5d1f0ebc740c0a80a35317d516a8724cb15d4459ceb579e118b9c70ad373369c2a40e567b88f1fdc010b1b993aa2f2a1f343c7a95eda9e06ce51a24e099e33875683888c34308c',
+          password: '26d270d4478fbf91.10000.5db2effea113f6d230f3adc6bf8ffc2faab485842a46b74509f15eb950c5d7c6d0d57992933e2d701b30b77b9e3b4eb3da40f62becb2e4eb11e9dfb86fc5edbf9ab896d5df26ed72c3904acc058623a6f03da7b1db3b426cf5a8bd6cc03a45313b1402e92c522c7cc02fb9b4eeae9e43c713736fb67a1aa4cd2f91390af9dd81',
           first_name: 'Matt',
           last_name: 'Reider',
           is_active: 1,

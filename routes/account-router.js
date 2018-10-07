@@ -70,7 +70,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 
   user = await User.create(email, password, firstName, lastName, organization);
   if (organization) {
-    await UORole.create({ user_id: user.id, organization_id: organization, role_id: Role.PendingRoleId });
+    await UORole.create({ user_id: user.id, organization_id: Number(organization), role_id: Role.PendingRoleId });
   };
   let data = {};
   if (organization) data.organization = organization;

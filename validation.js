@@ -49,7 +49,8 @@ const UpdateOrganizationSchema = {
 };
 const InviteLinkSchema = {
   name: Joi.string().min(2).required().label('Name'),
-  email: Joi.string().email().required().label('Email')
+  email: Joi.string().email().required().label('Email'),
+  send: Joi.boolean().required().label('Send')
 };
 const ChangePasswordSchema = {
   token: Joi.string().required().label('token'),
