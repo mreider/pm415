@@ -48,20 +48,46 @@ router.get('/orgs', async(req, res) => {
 });
 
 router.put('/', validate(UpdateUserSchema), async(req, res) => {
-  const data = {};
-  if (req.body.hasOwnProperty('password')) {
-    const hash = await User.hashPassword(req.body.password);
-    data.password = hash;
+  const data = {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName
   };
-  if (req.body.hasOwnProperty('firstName')) { data.firstName = req.body.firstName; };
-  if (req.body.hasOwnProperty('lastName')) { data.lastName = req.body.lastName; };
-  if (req.body.hasOwnProperty('email')) { data.email = req.body.email; };
+
+  let emailChanged = false;
+  let passwordChanged = false;
+
+  if (req.body.password) {
+    if (req.body.password !== req.body.confirmation) return res.boom.badData('Bad data', { success: false, message: 'Confirmation must match password' })
+
+    data.password = await User.hashPassword(req.body.password);
+    passwordChanged = true;
+  }
+
+  if (req.body.email) {
+    const emailsCount = await User.forge().where('id', '<>', req.user.id).where('email', req.body.email).count();
+
+    if (emailsCount > 0) return res.boom.conflict('Conflict', { success: false, message: `Email ${req.body.email} already registered` });
+
+    data.email = req.body.email;
+    emailChanged = true;
+  }
+
   try {
+    if (emailChanged || passwordChanged) {
+      data.confirmedAt = null;
+      data.isActive = false;
+    }
+
     req.user.set(data);
     await req.user.save();
-    res.json({ success: true, user: req.user });
+
+    if (emailChanged) {
+      // TODO: Send confirmation email
+    }
+
+    res.json({ success: true, doLogout: emailChanged || passwordChanged, user: req.user });
   } catch (error) {
-    res.json({ success: false, user: req.user });
+    res.json({ success: false, message: error.toString() });
   }
 });
 
