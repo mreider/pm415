@@ -18,7 +18,7 @@ module.exports = {
         req.user = await UORole.getUser(decoded.userId);
 
         req.organization = _.chain(req.user).get('organizations').find(org => {
-          return org.id === decoded.organizationId;
+          return org.id === decoded.orgId;
         }).value();
 
         req.role = _.chain(req.organization).get('roles').find(role => {
