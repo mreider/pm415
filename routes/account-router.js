@@ -25,7 +25,11 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   if (!user) return res.boom.notFound('Not found', { success: false, message: `User with email ${email} not found.` });
   if (!user.get('isActive') || !user.get('confirmedAt')) return res.boom.forbidden('Forbidden', { success: false, message: 'User not confirmed or inactive' });
 
-  await user.checkPassword(password);
+  try {
+    await user.checkPassword(password);
+  } catch (error) {
+    return res.boom.unauthorized('Unauthorized', {success: true, message: error.toString()});
+  }
 
   const orgId = _.get(user.related('organizations'), 'models[0].id');
 
