@@ -5,7 +5,7 @@ const router = Express.Router();
 
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
-const uuidv4 = require('uuid/v4');
+const UUID4 = require('uuid/v4');
 
 const { validate, UpdateUserSchema } = require('../validation');
 router.use(middlewares.LoginRequired);
@@ -20,7 +20,7 @@ router.get('/apikey', function(req, res) {
 });
 
 router.post('/apikey', async(req, res) => {
-  const apikey = uuidv4() + uuidv4();
+  const apikey = (UUID4() + UUID4()).replace('-', '');
   const data = { apiKey: apikey };
   try {
     req.user.set(data);
