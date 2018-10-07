@@ -5,6 +5,7 @@ const ModelBase = require('../db').modelBase;
 
 const Config = require('../config');
 const Bookshelf = require('../db').bookshelf;
+const UORoles = require('./users_organizations_roles');
 
 const Organization = require('./organization');
 const Role = require('./role');
@@ -13,7 +14,6 @@ const PasswordLength = 128;
 const SaltLen = 16;
 const Iterations = 10000;
 const Digest = 'sha512';
-const UORoles = require('./users_organizations_roles');
 
 const User = ModelBase.extend({
   tableName: 'users',
@@ -78,7 +78,7 @@ const User = ModelBase.extend({
     });
   },
 
-  async Role(userId, orgId) {
+  async hasRole(userId, orgId) {
     const hasRole = await UORoles.where({ user_id: userId, organization_id: orgId }).fetch();
     return hasRole;
   },
@@ -139,7 +139,7 @@ const User = ModelBase.extend({
       if (!validated.valid) return reject(new Error('Token invalid'));
       if (validated.expired) return reject(new Error({ message: 'Confirmation url expired', expired: true }));
       try {
-        const user = await User.findById(validated.data.userId);    
+        const user = await User.findById(validated.data.userId);
         if (!user) return reject(new Error('User not found'));
         const hash = await this.hashPassword(password);
         user.set({ password: hash });
