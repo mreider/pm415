@@ -66,8 +66,8 @@ const UpdateUserSchema = {
   firstName: Joi.string().min(0).allow('').optional().label('Firstname'),
   lastName: Joi.string().optional().label('Lastname'),
   email: Joi.string().required().label('Email'),
-  password: Joi.string().required(),
-  confirmation: Joi.string().required()
+  password: Joi.string().min(4).label('Password'),
+  confirmation: Joi.string().min(4).label('Confirmation')
 };
 module.exports = {
   validate: validate,

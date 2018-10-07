@@ -121,7 +121,7 @@ router.post('/delete/users', async (req, res) => {
 
 router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {
   const name = req.body.name;
-  const id = req.body.orgid;
+  const id = req.body.organizationId;
   let organization = await Organization.where({ id }).fetch();
   if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with id ${id} not found` });
   await knex('organizations')
@@ -132,8 +132,8 @@ router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {
 
 router.post('/delete', validate(DeleteOrgSchema), async (req, res) => {
   const userId = req.body.userid;
-  const organizationId = req.body.orgid;
-  const admin = await UORole.where({ organization_id: organizationId, user_id: userId, role_id: Role.AdminRoleId }).fetch();
+  const organizationId = req.body.organizationId;
+  const admin = await UORole.where({ organization_id: Number(organizationId), user_id: Number(userId), role_id: Role.AdminRoleId }).fetch();
   const organization = await Organization.where({ id: organizationId }).fetch();
   if (organization && !admin) return res.json({ success: false, message: 'Only the administrator of this organization can delete this organization.' });
   if (!admin && !organization) return res.json({ success: false, message: 'Organization not found.' });

@@ -45,7 +45,9 @@ router.get('/orgs', async(req, res) => {
 
 router.put('/', validate(UpdateUserSchema), async(req, res) => {
   const data = {};
-  if (req.body.hasOwnProperty('password')) {
+  if (req.body.hasOwnProperty('password') && req.body.password) {
+    console.log('password', req.body.password, 'confirmation', req.body.confirmation);
+    if (req.body.password !== req.body.confirmation) return res.json({ success: false, message: 'Password and confirmation does not match' });
     const hash = await User.hashPassword(req.body.password);
     data.password = hash;
   };
