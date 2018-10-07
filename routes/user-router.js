@@ -20,14 +20,15 @@ router.get('/apikey', function(req, res) {
 });
 
 router.post('/apikey', async(req, res) => {
-  const apikey = (UUID4() + UUID4()).replace('-', '');
-  const data = { apiKey: apikey };
+  const apikey = (UUID4() + UUID4()).replace(/-/g, '');
+
   try {
-    req.user.set(data);
+    req.user.set({ apiKey: apikey });
     await req.user.save();
+
     res.json({ success: true, apikey });
   } catch (error) {
-    res.json({ success: false });
+    res.json({ success: false, message: 'Unable to set new API key.' });
   }
 });
 
