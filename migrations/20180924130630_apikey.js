@@ -1,4 +1,3 @@
-
 exports.up = async function(knex) {
   return knex.raw(`
     ALTER TABLE users
