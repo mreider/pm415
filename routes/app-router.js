@@ -11,13 +11,13 @@ router.get('/', function(req, res) {
 
 router.post('/orgs/autorize', middlewares.OrgAdminRequired, async (req, res) => {
   const usersId = req.body.ids;
-  const organizationId = req.body.organizationId;
+  const orgId = req.body.orgId;
 
-  const dataToUpdate = await UOrole.where('user_id', ' in ', usersId).where({ role_id: Role.PendingRoleId, organization_id: organizationId }).fetchAll();
+  const dataToUpdate = await UOrole.where('user_id', ' in ', usersId).where({ role_id: Role.PendingRoleId, organization_id: orgId }).fetchAll();
 
   if (!dataToUpdate) return res.boom.conflict('Not found', { success: false, message: `No data to update` });
 
-  await UOrole.where('user_id', ' in ', usersId).where({ role_id: Role.PendingRoleId, organization_id: organizationId }).save({
+  await UOrole.where('user_id', ' in ', usersId).where({ role_id: Role.PendingRoleId, organization_id: orgId }).save({
     role_id: Role.MemberRoleId }, {
     method: 'update', patch: true }
   );

@@ -33,7 +33,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
 
   const orgId = _.get(user.related('organizations'), 'models[0].id');
 
-  const token = await user.generateToken({}, { organizationId: orgId });
+  const token = await user.generateToken({}, { orgId: orgId });
   res.json({ token: token, success: true, user: Utils.serialize(user) });
 });
 
