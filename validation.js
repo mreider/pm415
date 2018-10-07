@@ -56,11 +56,10 @@ const ChangePasswordSchema = {
   password: Joi.string().required().label('Password'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
-// TODO: If route implemeted correctly one of fields here becomes unnecessary
-// const DeleteOrgSchema = {
-//   userid: Joi.string().required().label('userid'),
-//   organizationId: Joi.string().required().label('organizationId')
-// };
+const DeleteOrgSchema = {
+  userId: Joi.string().required().label('userId'),
+  organizationId: Joi.string().required().label('organizationId')
+};
 const UpdateUserSchema = {
   firstName: Joi.string().min(0).allow('').optional().label('Firstname'),
   lastName: Joi.string().optional().label('Lastname'),
