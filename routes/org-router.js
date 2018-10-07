@@ -1,18 +1,26 @@
+const OmitDeep = require('omit-deep');
+
+const Nodemailer = require('nodemailer');
+const SendGridTransport = require('nodemailer-sendgrid-transport');
+const Handlebars = require('nodemailer-express-handlebars');
+
 const Express = require('express');
 const router = Express.Router();
+
+const knex = require('../db').knex;
 const middlewares = require('../middlewares');
+const Utils = require('../utils');
+
 const Organization = require('../models/organization');
 const UORole = require('../models/users_organizations_roles');
 const Role = require('../models/role');
 const User = require('../models/user');
-const OmitDeep = require('omit-deep');
+
 const Config = require('../config');
-const Nodemailer = require('nodemailer');
-const SendGridTransport = require('nodemailer-sendgrid-transport');
-const Handlebars = require('nodemailer-express-handlebars');
+
 const { validate, NewOrganizationSchema, InviteLinkSchema, DeleteOrgSchema, UpdateOrganizationSchema } = require('../validation');
+
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
-const knex = require('../db').knex;
 
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
 
@@ -23,45 +31,46 @@ router.get('/invitelink', async (req, res) => {
   if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, registration: 'false' });
 
   const user = await User.where({ email: validated.data.email }).fetch();
-  if (!user) return res.json({ success: true, registration: 'new', email: validated.data.email, organizationId: validated.data.organization });
-  res.json({ success: true, registration: 'add', email: validated.data.email, organizationId: validated.data.organization });
+
+  if (!user) return res.json({ success: true, message: 'Invitation token corrupted or expired' });
+
+  res.json({ success: true, registration: 'add', email: validated.data.email, orgId: validated.data.organization });
 });
 
-router.use(middlewares.LoginRequired);
-
-router.get('/', function (req, res) {
+router.get('/', middlewares.LoginRequired, function (req, res) {
   const user = OmitDeep(req.user.toJSON(), ['password']);
   res.json({ success: true, organizations: user.organizations, current: req.organization });
 });
 
-router.post('/switch/:organizationId', async (req, res) => {
-  const organizationId = parseInt(req.params.organizationId);
+router.post('/switch/:orgId', middlewares.LoginRequired, async (req, res) => {
+  const orgId = parseInt(req.params.orgId);
 
-  const organization = req.user.related('organizations').filter(o => o.get('id') === organizationId)[0];
+  const organization = req.user.organizations.filter(o => o.get('id') === orgId)[0];
 
-  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with ID ${organizationId} not found.` });
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization with ID ${orgId} not found.` });
 
-  const token = await req.user.generateToken({}, { organizationId });
+  const token = await req.user.generateToken({}, { orgId });
 
   return res.json({ success: true, organization, token });
 });
 
-router.get('/users/:organizationId', async (req, res) => {
-  const organizationId = parseInt(req.params.organizationId);
-  let users = await knex('users_organizations_roles').select(
-    'users.id',
-    'users.email',
-    'roles.role',
-    'users.first_name',
-    'users.last_name',
-    'users.is_active',
-    'users.api_key').leftJoin(
-    'roles', 'users_organizations_roles.role_id', 'roles.id').leftJoin(
-    'users', 'users_organizations_roles.user_id', 'users.id').where({ organization_id: organizationId });
-  res.json({ success: true, users });
+router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
+  const orgId = req.params.orgId;
+
+  let rows = await UORole.where('organization_id', orgId).fetchAll({ withRelated: ['user', 'role'] });
+  rows = rows.map(row => {
+    return {
+      userId: row.get('userId'),
+      firstName: row.related('user').get('firstName'),
+      lastName: row.related('user').get('lastName'),
+      role: row.related('role').get('role')
+    };
+  });
+
+  res.json({ success: true, users: rows });
 });
 
-router.post('/new', validate(NewOrganizationSchema), async (req, res) => {
+router.post('/', [middlewares.LoginRequired, validate(NewOrganizationSchema)], async (req, res) => {
   const name = req.body.name;
   let organization = await Organization.where({ name }).fetch();
   if (organization) return res.boom.conflict('Exists', { success: false, message: `Organization with name ${name} already exists` });
@@ -73,7 +82,7 @@ router.post('/new', validate(NewOrganizationSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user });
 });
 
-router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
+router.post('/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema)], async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
   let organization = await Organization.where({ name }).fetch();
@@ -99,82 +108,76 @@ router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user, token });
 });
 
-router.post('/delete/users', async (req, res) => {
+router.post('/:orgId/users/remove', middlewares.OrgAdminRequired, async (req, res) => {
   const usersId = req.body.usersid;
-  const organizationId = req.organization.id;
-  const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
-  await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).destroy();
-  return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
+  const orgId = req.params.orgId;
+
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  let currentAdmins = await UORole({ organization_id: orgId, role_id: Role.AdminRoleId }).fetchAll();
+  currentAdmins = currentAdmins.map(row => row.get('userId'));
+
+  const remainsAdmins = _.difference(currentAdmins, usersId);
+
+  if (remainsAdmins.length < 1) return res.conflict('Conflict', {success: false, message: 'At least one admin must remains in'})
+
+  return res.json({ success: true });
 });
 
-// admin routes
-router.use(middlewares.OrgAdminRequired);
-// admin routes
-
-router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {
+router.put('/:orgId/update', [middlewares.OrgAdminRequired, validate(UpdateOrganizationSchema)], async (req, res) => {
   const name = req.body.name;
-  const organizationId = req.body.organizationId;
-  let organization = await Organization.where({ organizationId }).fetch();
-  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with id ${id} not found` });
-  await knex('organizations')
-    .where({ id: organizationId })
-    .update('name', name);
+  const orgId = req.params.orgId;
+
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  organization.set('name', name);
+  await organization.save();
+
   return res.json({ success: true, organization });
 });
 
-router.post('/delete', validate(DeleteOrgSchema), async (req, res) => {
-  const userId = req.body.userId;
-  const organizationId = req.body.organizationId;
-  const admin = await UORole.where({ organization_id: organizationId, user_id: userId, role_id: Role.AdminRoleId }).fetch();
-  const organization = await Organization.where({ id: organizationId }).fetch();
-  if (organization && !admin) return res.json({ success: false, message: 'Only the administrator of this organization can delete this organization.' });
-  if (!admin && !organization) return res.json({ success: false, message: 'Organization not found.' });
-  await UORole.where({ organization_id: organizationId }).destroy();
-  await Organization.where({ id: organizationId }).destroy();
-  return res.json({ success: true, message: 'Deleted' });
+router.delete('/:orgId', middlewares.OrgAdminRequired, async (req, res) => {
+  const orgId = req.params.orgId;
+
+  const admin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!admin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  await UORole.where({ organization_id: orgId }).destroy();
+  await Organization.where({ id: orgId }).destroy();
+
+  return res.json({ success: true });
 });
 
-router.post('/resetpassword/users', async (req, res) => {
-  const usersId = req.body.usersid;
-  const users = await User.where('id', 'in', usersId).fetchAll();
-  await users.forEach(newPasswordAndSendMail);
-  return res.json({ success: true, users });
+router.post('/:orgId/admin/grant', middlewares.OrgAdminRequired, async (req, res) => {
+  // TODO: Alex, please rewrite method from below to smaller one here
 });
 
-router.post('/changerole/users', async (req, res) => {
-  const organizationId = parseInt(req.organization.id);
-  const usersId = req.body.usersid;
-  const roleId = req.body.roleid;
-  let users = await knex('users_organizations_roles')
-    .where({ organization_id: organizationId })
-    .where('user_id', 'in', usersId)
-    .update('role_id', roleId);
-  res.json({ success: true, users });
+router.post('/:orgId/admin/revoke', middlewares.OrgAdminRequired, async (req, res) => {
+  // TODO: Alex, please rewrite method from below to smaller one here
 });
 
-function newPasswordAndSendMail(user) {
-  return new Promise(async (resolve, reject) => {
-    const randomstring = Math.random().toString(36).slice(-8);
-    try {
-      const hash = await User.hashPassword(randomstring);
-      user.set({ password: hash });
-      await user.save();
+// TODO: Implement grant/revoke methods and remove this method
+// router.post('/changerole/users', middlewares.OrgAdminRequired, async (req, res) => {
+//   const orgId = parseInt(req.organization.id);
+//   const usersId = req.body.usersid;
+//   const roleId = req.body.roleid;
 
-      var mail = {
-        from: Config.mailerConfig.from,
-        to: user.get('email'),
-        subject: 'Password reset',
-        template: 'admin-change-password',
-        context: {
-          newpassword: randomstring
-        }
-      };
-      mailer.sendMail(mail);
+//   let users = await knex('users_organizations_roles')
+//     .where({ organization_id: orgId })
+//     .where('user_id', 'in', usersId)
+//     .update('role_id', roleId);
+//   res.json({ success: true, users });
+// });
 
-      resolve(user);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
 module.exports = router;
