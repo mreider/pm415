@@ -5,10 +5,10 @@ const ModelBase = require('../db').modelBase;
 
 const Config = require('../config');
 const Bookshelf = require('../db').bookshelf;
-const UORoles = require('./users_organizations_roles');
+// const UORoles = require('./users_organizations_roles');
 
 const Organization = require('./organization');
-const Role = require('./role');
+// const Role = require('./role');
 
 const PasswordLength = 128;
 const SaltLen = 16;
@@ -22,10 +22,6 @@ const User = ModelBase.extend({
 
   organizations() {
     return this.belongsToMany(Organization, 'users_organizations_roles', 'user_id', 'organization_id');
-  },
-
-  roles() {
-    return this.belongsToMany(Role, 'users_organizations_roles', 'user_id', 'role_id');
   },
 
   // Instance methods
@@ -78,10 +74,10 @@ const User = ModelBase.extend({
     });
   },
 
-  async hasRole(userId, orgId) {
-    const hasRole = await UORoles.where({ user_id: userId, organization_id: orgId }).fetch();
-    return hasRole;
-  },
+  // async hasRole(userId, orgId) {
+  //   const hasRole = await UORoles.where({ user_id: userId, organization_id: orgId }).fetch();
+  //   return hasRole;
+  // },
 
   validateToken(token) {
     let decoded = null;

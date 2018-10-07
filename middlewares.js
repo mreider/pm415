@@ -1,10 +1,11 @@
+const _ = require('lodash');
 
 const Jwt = require('jsonwebtoken');
 const Url = require('url');
 const Config = require('./config');
-const User = require('./models/user');
-const Utils = require('./utils');
+
 const Role = require('./models/role');
+const UORole = require('./models/users_organizations_roles');
 
 module.exports = {
   UserTokenMiddleware: () => {
@@ -14,12 +15,16 @@ module.exports = {
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
 
-        const user = await User.where({ 'id': decoded.userId }).fetch({ withRelated: ['organizations.roles'] });
-        req.user = user;
-        req.organization = user.related('organizations').filter(org => org.get('id') === decoded.organizationId)[0];
-        const role = await User.Role(decoded.userId, decoded.organizationId);
-        if (role) req.roleId = Utils.serialize(role).roleId;
-        if (!role) req.roleId = 0;
+        req.user = await UORole.getUser(decoded.userId);
+
+        req.organization = _.chain(req.user).get('organizations').find(org => {
+          return org.id === decoded.organizationId;
+        }).value();
+
+        req.role = _.chain(req.organization).get('roles').find(role => {
+          return role.id === Role.AdminRoleId || role.id === Role.MemberRoleId || role.id === Role.PendingRoleId;
+        }).value();
+
         next(null);
       } catch (error) {
         next(null);
@@ -32,7 +37,7 @@ module.exports = {
       return res.boom.unauthorized('Authentication required', { success: false });
     }
 
-    if (!req.user.get('isActive') || !req.user.get('confirmedAt')) {
+    if (!req.user.isActive || !req.user.confirmedAt) {
       return res.boom.forbidden('User not confirmed or inactive', { success: false });
     }
 
@@ -46,15 +51,14 @@ module.exports = {
       return res.boom.unauthorized('Authentication required', { success: false, redirect: '/login?next=' + redirect });
     }
 
-    if (!req.user.get('isActive') || !req.user.get('confirmedAt')) {
+    if (!req.user.isActive || !req.user.confirmedAt) {
       return res.boom.forbidden('User not confirmed or inactive', { success: false });
     }
 
     if (!req.organization) {
       return res.boom.forbidden('User must be assigned to organization first', { success: false });
     }
-    // TODO: Add role in organization check here instead of user role check
-    if (req.roleId != Role.AdminRoleId) {
+    if (req.role.id === Role.AdminRoleId) {
       return res.boom.unauthorized('Admin privileges required', { success: false, redirect: '/login?next=' + redirect });
     }
 

@@ -7,16 +7,16 @@ const Roles = ModelBase.extend({
   // Association
 
   // Instance methods
-
 },
 {
+  // Static methods
+
   AdminRole: 'Admin',
   AdminRoleId: 2,
   MemberRole: 'Member',
   MemberRoleId: 1,
   PendingRole: 'Pending',
   PendingRoleId: 3
-  // Static methods
 });
 
 module.exports = Bookshelf.model('Roles', Roles);
