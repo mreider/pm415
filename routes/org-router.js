@@ -7,9 +7,7 @@ const Handlebars = require('nodemailer-express-handlebars');
 const Express = require('express');
 const router = Express.Router();
 
-const knex = require('../db').knex;
 const middlewares = require('../middlewares');
-const Utils = require('../utils');
 
 const Organization = require('../models/organization');
 const UORole = require('../models/users_organizations_roles');
