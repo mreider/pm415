@@ -12,11 +12,22 @@ const Roles = ModelBase.extend({
   // Static methods
 
   AdminRole: 'Admin',
-  AdminRoleId: 2,
+  AdminRoleId: 1,
   MemberRole: 'Member',
-  MemberRoleId: 1,
+  MemberRoleId: 2,
   PendingRole: 'Pending',
-  PendingRoleId: 3
+  PendingRoleId: 3,
+
+  sort(rolesList) {
+    return rolesList.sort((roleA, roleB) => {
+      const aId = typeof roleA.get === 'function' ? roleA.get('id') : roleA.id;
+      const bId = typeof roleB.get === 'function' ? roleB.get('id') : roleB.id;
+
+      if (aId < bId) return -1;
+      if (aId > bId) return 1;
+      return 0;
+    });
+  }
 });
 
 module.exports = Bookshelf.model('Roles', Roles);
