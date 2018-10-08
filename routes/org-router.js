@@ -36,18 +36,18 @@ router.get('/invitelink', async (req, res) => {
 });
 
 router.get('/', middlewares.LoginRequired, function (req, res) {
-  const user = OmitDeep(req.user.toJSON(), ['password']);
+  const user = OmitDeep(req.user, ['password']);
   res.json({ success: true, organizations: user.organizations, current: req.organization });
 });
 
 router.post('/switch/:orgId', middlewares.LoginRequired, async (req, res) => {
   const orgId = parseInt(req.params.orgId);
 
-  const organization = req.user.organizations.filter(o => o.get('id') === orgId)[0];
+  const organization = req.user.organizations.filter(o => o.id === orgId)[0];
 
   if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization with ID ${orgId} not found.` });
 
-  const token = await req.user.generateToken({}, { orgId });
+  const token = await User.forge({ id: req.user.id }).generateToken({}, { orgId });
 
   return res.json({ success: true, organization, token });
 });
@@ -126,7 +126,7 @@ router.post('/:orgId/users/remove', middlewares.OrgAdminRequired, async (req, re
   return res.json({ success: true });
 });
 
-router.put('/:orgId/update', [middlewares.OrgAdminRequired, validate(UpdateOrganizationSchema)], async (req, res) => {
+router.put('/:orgId', [middlewares.LoginRequired, validate(UpdateOrganizationSchema)], async (req, res) => {
   const name = req.body.name;
   const orgId = req.params.orgId;
 
@@ -142,7 +142,7 @@ router.put('/:orgId/update', [middlewares.OrgAdminRequired, validate(UpdateOrgan
   return res.json({ success: true, organization });
 });
 
-router.delete('/:orgId', middlewares.OrgAdminRequired, async (req, res) => {
+router.delete('/:orgId', middlewares.LoginRequired, async (req, res) => {
   const orgId = req.params.orgId;
 
   const admin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
