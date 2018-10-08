@@ -1,18 +1,68 @@
+const _ = require('lodash');
+const UUID4 = require('uuid/v4');
 const Express = require('express');
-const User = require('../models/user');
-const Role = require('../models/role');
+
 const router = Express.Router();
 
+const knex = require('../db').knex;
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
-const uuidv4 = require('uuid/v4');
-const knex = require('../db').knex;
+
+const Role = require('../models/role');
 
 const { validate, UpdateUserSchema } = require('../validation');
+
+const User = require('../models/user');
+
 router.use(middlewares.LoginRequired);
 
 router.get('/', function(req, res) {
-  res.json({ success: true, user: Utils.serialize(req.user), organization: Utils.serialize(req.organization), role: Role.RolesObject[req.roleId] });
+  res.json({ success: true, user: Utils.serialize(req.user), organization: Utils.serialize(req.organization) });
+});
+
+router.put('/', validate(UpdateUserSchema), async(req, res) => {
+  const data = {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName
+  };
+
+  let emailChanged = false;
+  let passwordChanged = false;
+  const user = await User.where({ id: req.user.id }).fetch();
+
+  if (req.body.password) {
+    if (req.body.password !== req.body.confirmation) return res.boom.badData('Bad data', { success: false, message: 'Confirmation must match password' })
+
+    data.password = await User.hashPassword(req.body.password);
+    passwordChanged = true;
+  }
+
+  if (req.body.email && req.body.email !== user.get('email')) {
+    const emailsCount = await User.forge().where('id', '<>', req.user.id).where('email', req.body.email).count();
+
+    if (emailsCount > 0) return res.boom.conflict('Conflict', { success: false, message: `Email ${req.body.email} already registered` });
+
+    data.email = req.body.email;
+    emailChanged = true;
+  }
+
+  try {
+    if (emailChanged) {
+      data.confirmedAt = null;
+      data.isActive = false;
+    }
+
+    user.set(data);
+    await user.save();
+
+    if (emailChanged) {
+      // TODO: Send confirmation email
+    }
+
+    res.json({ success: true, doLogout: emailChanged || passwordChanged, user: req.user });
+  } catch (error) {
+    res.json({ success: false, message: error.toString() });
+  }
 });
 
 router.get('/apikey', function(req, res) {
@@ -21,46 +71,25 @@ router.get('/apikey', function(req, res) {
 });
 
 router.post('/apikey', async(req, res) => {
-  const apikey = uuidv4() + uuidv4();
-  const data = { apiKey: apikey };
-  try {
-    req.user.set(data);
-    await req.user.save();
-    res.json({ success: true, apikey });
-  } catch (error) {
-    res.json({ success: false });
-  }
+  const apiKey = (UUID4() + UUID4()).replace(/-/g, '');
+
+  await knex('users').where({ id: req.user.id }).update('api_key', apiKey);
+  req.user.apiKey = apiKey;
+  res.json({ success: true, apiKey });
 });
 
 router.get('/orgs', async(req, res) => {
-  let organizations = await knex('users_organizations_roles').select(
-    'roles.id as role_id',
-    'roles.role',
-    'organizations.name',
-    'organizations.id as id').leftJoin(
-    'roles', 'users_organizations_roles.role_id', 'roles.id').leftJoin(
-    'organizations', 'users_organizations_roles.organization_id', 'organizations.id').where({ user_id: req.user.id });
-  res.json({ success: true, organizations });
-});
+  var organizations = req.user.organizations.map(org => {
+    const role = Role.sort(org.roles)[0];
 
-router.put('/', validate(UpdateUserSchema), async(req, res) => {
-  const data = {};
-  if (req.body.hasOwnProperty('password') && req.body.password) {
-    console.log('password', req.body.password, 'confirmation', req.body.confirmation);
-    if (req.body.password !== req.body.confirmation) return res.json({ success: false, message: 'Password and confirmation does not match' });
-    const hash = await User.hashPassword(req.body.password);
-    data.password = hash;
-  };
-  if (req.body.hasOwnProperty('firstName')) { data.firstName = req.body.firstName; };
-  if (req.body.hasOwnProperty('lastName')) { data.lastName = req.body.lastName; };
-  if (req.body.hasOwnProperty('email')) { data.email = req.body.email; };
-  try {
-    req.user.set(data);
-    await req.user.save();
-    res.json({ success: true, user: req.user });
-  } catch (error) {
-    res.json({ success: false, user: req.user });
-  }
+    return {
+      orgId: org.id,
+      name: org.name,
+      role: role && role.role
+    };
+  });
+
+  res.json({ success: true, organizations });
 });
 
 module.exports = router;

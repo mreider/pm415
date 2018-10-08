@@ -26,7 +26,7 @@ const LoginSchema = {
 
 const RegisterSchema = {
   email: Joi.string().email().required().label('Email'),
-  password: Joi.string().min(4).required().label('Password'),
+  password: Joi.string().required().label('Password'),
   firstName: Joi.string().required().label('First Name'),
   lastName: Joi.string().required().label('Last Name'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation'),
@@ -37,38 +37,38 @@ const RegisterSchema = {
 const VerifySchema = {
   token: Joi.string().required()
 };
+
 const ForgotPasswordSchema = {
   email: Joi.string().email().required().label('Email')
 };
+
 const NewOrganizationSchema = {
   name: Joi.string().min(2).required().label('Name')
 };
+
 const UpdateOrganizationSchema = {
-  name: Joi.string().min(2).required().label('Name'),
-  organizationId: Joi.string().required().label('organizationId')
+  name: Joi.string().min(2).required().label('Name')
 };
+
 const InviteLinkSchema = {
   name: Joi.string().min(2).required().label('Name'),
-  email: Joi.string().email().required().label('Email'),
-  send: Joi.boolean().required().label('Send')
+  email: Joi.string().email().required().label('Email')
 };
+
 const ChangePasswordSchema = {
   token: Joi.string().required().label('token'),
-  password: Joi.string().required().min(4).label('Password'),
+  password: Joi.string().required().label('Password'),
   confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
-// TODO: If route implemeted correctly one of fields here becomes unnecessary//
-const DeleteOrgSchema = {
-  userid: Joi.string().required().label('userid'),
-  organizationId: Joi.string().required().label('organizationId')
-};
+
 const UpdateUserSchema = {
   firstName: Joi.string().min(0).allow('').optional().label('Firstname'),
   lastName: Joi.string().optional().label('Lastname'),
   email: Joi.string().required().label('Email'),
-  password: Joi.string().min(4).label('Password'),
-  confirmation: Joi.string().min(4).label('Confirmation')
+  password: Joi.string().optional(),
+  confirmation: Joi.string().valid(Joi.ref('password')).optional().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
+
 module.exports = {
   validate: validate,
   LoginSchema,
@@ -79,6 +79,5 @@ module.exports = {
   UpdateUserSchema,
   NewOrganizationSchema,
   InviteLinkSchema,
-  DeleteOrgSchema,
   UpdateOrganizationSchema
 };

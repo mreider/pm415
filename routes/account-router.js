@@ -25,11 +25,15 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   if (!user) return res.boom.notFound('Not found', { success: false, message: `User with email ${email} not found.` });
   if (!user.get('isActive') || !user.get('confirmedAt')) return res.boom.forbidden('Forbidden', { success: false, message: 'User not confirmed or inactive' });
 
-  await user.checkPassword(password);
+  try {
+    await user.checkPassword(password);
+  } catch (error) {
+    return res.boom.unauthorized('Unauthorized', {success: true, message: error.toString()});
+  }
 
   const orgId = _.get(user.related('organizations'), 'models[0].id');
 
-  const token = await user.generateToken({}, { organizationId: orgId });
+  const token = await user.generateToken({}, { orgId: orgId });
   res.json({ token: token, success: true, user: Utils.serialize(user) });
 });
 
@@ -70,7 +74,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 
   user = await User.create(email, password, firstName, lastName, organization);
   if (organization) {
-    await UORole.create({ user_id: user.id, organization_id: Number(organization), role_id: Role.PendingRoleId });
+    await UORole.create({ user_id: user.id, organization_id: organization, role_id: Role.PendingRoleId });
   };
   let data = {};
   if (organization) data.organization = organization;

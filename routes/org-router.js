@@ -1,19 +1,27 @@
+const _ = require('lodash');
+const OmitDeep = require('omit-deep');
+
+const Nodemailer = require('nodemailer');
+const SendGridTransport = require('nodemailer-sendgrid-transport');
+const Handlebars = require('nodemailer-express-handlebars');
+
 const Express = require('express');
 const router = Express.Router();
+
 const middlewares = require('../middlewares');
+
 const Organization = require('../models/organization');
 const UORole = require('../models/users_organizations_roles');
 const Role = require('../models/role');
 const User = require('../models/user');
-const OmitDeep = require('omit-deep');
+
 const Config = require('../config');
-const Nodemailer = require('nodemailer');
-const SendGridTransport = require('nodemailer-sendgrid-transport');
-const Handlebars = require('nodemailer-express-handlebars');
-const { validate, NewOrganizationSchema, InviteLinkSchema, DeleteOrgSchema, UpdateOrganizationSchema } = require('../validation');
-const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
+
 const knex = require('../db').knex;
-const Utils = require('../utils');
+
+const { validate, NewOrganizationSchema, InviteLinkSchema, UpdateOrganizationSchema } = require('../validation');
+
+const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
 
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
 
@@ -22,48 +30,49 @@ router.get('/invitelink', async (req, res) => {
 
   const validated = User.validateToken(token);
   if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, registration: 'false' });
-  let orgranization = await Organization.where({ id: validated.data.organization }).fetch();
-  if (!orgranization) return res.json({ success: false, registration: 'false' });
-  orgranization = Utils.serialize(orgranization);
+
   const user = await User.where({ email: validated.data.email }).fetch();
-  if (!user) return res.json({ success: true, registration: 'new', email: validated.data.email, organization_id: validated.data.organization, orgranization_name: orgranization.name });
-  res.json({ success: true, registration: 'add', email: validated.data.email, organization_id: validated.data.organization, orgranization_name: orgranization.name });
+
+  if (!user) return res.json({ success: true, message: 'Invitation token corrupted or expired' });
+
+  res.json({ success: true, registration: 'add', email: validated.data.email, orgId: validated.data.organization });
 });
 
-router.use(middlewares.LoginRequired);
-
-router.get('/', function (req, res) {
-  const user = OmitDeep(req.user.toJSON(), ['password']);
+router.get('/', middlewares.LoginRequired, function (req, res) {
+  const user = OmitDeep(req.user, ['password']);
   res.json({ success: true, organizations: user.organizations, current: req.organization });
 });
 
-router.post('/switch/:organizationId', async (req, res) => {
-  const organizationId = parseInt(req.params.organizationId);
-  const organization = req.user.related('organizations').filter(o => o.get('id') === organizationId)[0];
+router.post('/switch/:orgId', middlewares.LoginRequired, async (req, res) => {
+  const orgId = parseInt(req.params.orgId);
 
-  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with ID ${organizationId} not found.` });
+  const organization = req.user.organizations.filter(o => o.id === orgId)[0];
 
-  const token = await req.user.generateToken({}, { organizationId });
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization with ID ${orgId} not found.` });
+
+  const token = await User.forge({ id: req.user.id }).generateToken({}, { orgId });
 
   return res.json({ success: true, organization, token });
 });
 
-router.get('/users/:organizationId', async (req, res) => {
-  const organizationId = parseInt(req.params.organizationId);
-  let users = await knex('users_organizations_roles').select(
-    'users.id',
-    'users.email',
-    'roles.role',
-    'users.first_name',
-    'users.last_name',
-    'users.is_active',
-    'users.api_key').leftJoin(
-    'roles', 'users_organizations_roles.role_id', 'roles.id').leftJoin(
-    'users', 'users_organizations_roles.user_id', 'users.id').where({ organization_id: organizationId });
-  res.json({ success: true, users });
+router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
+  const orgId = req.params.orgId;
+
+  let rows = await UORole.where('organization_id', orgId).fetchAll({ withRelated: ['user', 'role'] });
+  rows = rows.map(row => {
+    return {
+      userId: row.related('user').get('id'),
+      email: row.related('user').get('email'),
+      firstName: row.related('user').get('firstName'),
+      lastName: row.related('user').get('lastName'),
+      role: row.related('role').get('role')
+    };
+  });
+
+  res.json({ success: true, users: rows });
 });
 
-router.post('/new', validate(NewOrganizationSchema), async (req, res) => {
+router.post('/', [middlewares.LoginRequired, validate(NewOrganizationSchema)], async (req, res) => {
   const name = req.body.name;
   let organization = await Organization.where({ name }).fetch();
   if (organization) return res.boom.conflict('Exists', { success: false, message: `Organization with name ${name} already exists` });
@@ -75,10 +84,9 @@ router.post('/new', validate(NewOrganizationSchema), async (req, res) => {
   return res.json({ success: true, organization, user: req.user });
 });
 
-router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
+router.post('/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema)], async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
-  const send = req.body.send;
   let organization = await Organization.where({ name }).fetch();
   if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with the name ${name} was not found` });
   let user = await User.where({ email }).fetch();
@@ -87,72 +95,80 @@ router.post('/invitelink', validate(InviteLinkSchema), async (req, res) => {
     if (uorole) return res.boom.conflict('Exists', { success: false, message: `This user already have access to this organization ${email}, ${organization}` });
   };
   const token = await req.user.generateToken({ expiresIn: '1d' }, { email: email, organization: organization.id });
-  if (send === true) {
-    var mail = {
-      from: Config.mailerConfig.from,
-      to: email,
-      subject: 'invitelink',
-      template: 'invite-link-registration',
-      context: {
-        confirm_url: Config.siteUrl + 'invitelink/?token=' + token
-      }
-    };
 
-    mailer.sendMail(mail);
-  }
-  return res.json({ success: true, organization, user: req.user, token, confirm_url: Config.siteUrl + 'invitelink/?token=' + token });
+  var mail = {
+    from: Config.mailerConfig.from,
+    to: email,
+    subject: 'invitelink',
+    template: 'invite-link-registration',
+    context: {
+      confirm_url: Config.siteUrl + 'invitelink/?token=' + token
+    }
+  };
+
+  mailer.sendMail(mail);
+  return res.json({ success: true, organization, user: req.user, token });
 });
 
-// admin routes
-router.use(middlewares.OrgAdminRequired);
-// admin routes
+router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) => {
+  const usersId = req.body.usersId;
+  const orgId = req.params.orgId;
 
-router.post('/delete/users', async (req, res) => {
-  const usersId = req.body.usersid;
-  const organizationId = req.organization.id;
-  try {
-    const ourole = await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).fetchAll();
-    await UORole.where({ organization_id: organizationId }).where('user_id', 'in', usersId).where('role_id', '<>', Role.AdminRoleId).destroy();
-    return res.json({ success: true, allrecords: usersId, organizationId, deleted: ourole });
-  } catch (error) {
-    return res.json({ success: false });
-  }
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  let currentAdmins = await UORole.where({ organization_id: orgId, role_id: Role.AdminRoleId }).fetchAll();
+  currentAdmins = currentAdmins.map(row => row.get('userId'));
+
+  const remainsAdmins = _.difference(currentAdmins, usersId);
+
+  if (remainsAdmins.length < 1) return res.boom.conflict('Conflict', { success: false, message: 'At least one admin must remains in' });
+
+  await UORole.where('user_id', 'IN', usersId).where('organization_id', orgId).destroy();
+
+  return res.json({ success: true });
 });
 
-router.post('/update', validate(UpdateOrganizationSchema), async (req, res) => {
+router.put('/:orgId', [middlewares.LoginRequired, validate(UpdateOrganizationSchema)], async (req, res) => {
   const name = req.body.name;
-  const id = req.body.organizationId;
-  let organization = await Organization.where({ id }).fetch();
-  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with id ${id} not found` });
-  await knex('organizations')
-    .where({ id: id })
-    .update('name', name);
+  const orgId = req.params.orgId;
+
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  organization.set('name', name);
+  await organization.save();
+
   return res.json({ success: true, organization });
 });
 
-router.post('/delete', validate(DeleteOrgSchema), async (req, res) => {
-  const userId = req.body.userid;
-  const organizationId = req.body.organizationId;
-  const admin = await UORole.where({ organization_id: Number(organizationId), user_id: Number(userId), role_id: Role.AdminRoleId }).fetch();
-  const organization = await Organization.where({ id: organizationId }).fetch();
-  if (organization && !admin) return res.json({ success: false, message: 'Only the administrator of this organization can delete this organization.' });
-  if (!admin && !organization) return res.json({ success: false, message: 'Organization not found.' });
-  await UORole.where({ organization_id: organizationId }).destroy();
-  await Organization.where({ id: organizationId }).destroy();
-  return res.json({ success: true, message: 'Deleted' });
+router.delete('/:orgId', middlewares.LoginRequired, async (req, res) => {
+  const orgId = req.params.orgId;
+
+  const admin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!admin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  await UORole.where({ organization_id: orgId }).destroy();
+  await Organization.where({ id: orgId }).destroy();
+
+  return res.json({ success: true });
 });
 
-router.post('/resetpassword/users', async (req, res) => {
-  const usersId = req.body.usersid;
-  const users = await User.where('id', 'in', usersId).fetchAll();
-  await users.forEach(newPasswordAndSendMail);
-  return res.json({ success: true, users });
-});
-
-router.post('/changerole/admin/users', async (req, res) => {
-  const organizationId = parseInt(req.organization.id);
+router.put('/:orgId/admin/grant', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersid;
   const roleId = Role.AdminRoleId;
+  const organizationId = parseInt(req.params.orgId);
+  const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: roleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
   let users = await knex('users_organizations_roles')
     .where({ organization_id: organizationId })
     .where('user_id', 'in', usersId)
@@ -160,10 +176,12 @@ router.post('/changerole/admin/users', async (req, res) => {
   res.json({ success: true, users });
 });
 
-router.post('/changerole/member/users', async (req, res) => {
-  const organizationId = parseInt(req.organization.id);
+router.put('/:orgId/admin/revoke', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersid;
   const roleId = Role.MemberRoleId;
+  const organizationId = parseInt(req.params.orgId);
+  const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
   let users = await knex('users_organizations_roles')
     .where({ organization_id: organizationId })
     .where('user_id', 'in', usersId)
@@ -171,29 +189,4 @@ router.post('/changerole/member/users', async (req, res) => {
   res.json({ success: true, users });
 });
 
-function newPasswordAndSendMail(user) {
-  return new Promise(async (resolve, reject) => {
-    const randomstring = Math.random().toString(36).slice(-8);
-    try {
-      const hash = await User.hashPassword(randomstring);
-      user.set({ password: hash });
-      await user.save();
-
-      var mail = {
-        from: Config.mailerConfig.from,
-        to: user.get('email'),
-        subject: 'Password reset',
-        template: 'admin-change-password',
-        context: {
-          newpassword: randomstring
-        }
-      };
-      mailer.sendMail(mail);
-
-      resolve(user);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
 module.exports = router;
