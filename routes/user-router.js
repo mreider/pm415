@@ -1,13 +1,16 @@
+const UUID4 = require('uuid/v4');
 const Express = require('express');
-const User = require('../models/user');
 
 const router = Express.Router();
 
+const knex = require('../db').knex;
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
-const UUID4 = require('uuid/v4');
 
 const { validate, UpdateUserSchema } = require('../validation');
+
+const User = require('../models/user');
+
 router.use(middlewares.LoginRequired);
 
 router.get('/', function(req, res) {
@@ -20,16 +23,11 @@ router.get('/apikey', function(req, res) {
 });
 
 router.post('/apikey', async(req, res) => {
-  const apikey = (UUID4() + UUID4()).replace(/-/g, '');
+  const apiKey = (UUID4() + UUID4()).replace(/-/g, '');
 
-  try {
-    req.user.set({ apiKey: apikey });
-    await req.user.save();
-
-    res.json({ success: true, apikey });
-  } catch (error) {
-    res.json({ success: false, message: 'Unable to set new API key.' });
-  }
+  await knex('users').where({ id: req.user.id }).update('api_key', apiKey);
+  req.user.apiKey = apiKey;
+  res.json({ success: true, apiKey });
 });
 
 router.get('/orgs', async(req, res) => {
@@ -55,6 +53,7 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
 
   let emailChanged = false;
   let passwordChanged = false;
+  const user = await User.where({ id: req.user.id }).fetch();
 
   if (req.body.password) {
     if (req.body.password !== req.body.confirmation) return res.boom.badData('Bad data', { success: false, message: 'Confirmation must match password' })
@@ -63,7 +62,7 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
     passwordChanged = true;
   }
 
-  if (req.body.email) {
+  if (req.body.email && req.body.email !== user.get('email')) {
     const emailsCount = await User.forge().where('id', '<>', req.user.id).where('email', req.body.email).count();
 
     if (emailsCount > 0) return res.boom.conflict('Conflict', { success: false, message: `Email ${req.body.email} already registered` });
@@ -78,8 +77,8 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
       data.isActive = false;
     }
 
-    req.user.set(data);
-    await req.user.save();
+    user.set(data);
+    await user.save();
 
     if (emailChanged) {
       // TODO: Send confirmation email
