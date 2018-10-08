@@ -72,7 +72,7 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
   }
 
   try {
-    if (emailChanged || passwordChanged) {
+    if (emailChanged) {
       data.confirmedAt = null;
       data.isActive = false;
     }
