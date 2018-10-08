@@ -167,27 +167,31 @@ router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) 
 
 router.put('/:orgId/admin/grant', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersid;
-  const roleId = Role.AdminRoleId;
-  const organizationId = parseInt(req.params.orgId);
-  const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: roleId }).fetch();
+  const organizationId = req.params.orgId;
+
+  const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
   if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
   let users = await knex('users_organizations_roles')
     .where({ organization_id: organizationId })
     .where('user_id', 'in', usersId)
-    .update('role_id', roleId);
+    .update('role_id', Role.AdminRoleId);
+
   res.json({ success: true, users });
 });
 
 router.put('/:orgId/admin/revoke', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersid;
-  const roleId = Role.MemberRoleId;
-  const organizationId = parseInt(req.params.orgId);
+  const organizationId = req.params.orgId;
+
   const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
   if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
   let users = await knex('users_organizations_roles')
     .where({ organization_id: organizationId })
     .where('user_id', 'in', usersId)
-    .update('role_id', roleId);
+    .update('role_id', Role.MemberRoleId);
+
   res.json({ success: true, users });
 });
 

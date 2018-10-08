@@ -26,10 +26,10 @@ const LoginSchema = {
 
 const RegisterSchema = {
   email: Joi.string().email().required().label('Email'),
-  password: Joi.string().required().label('Password'),
+  password: Joi.string().min(4).required().label('Password'),
   firstName: Joi.string().required().label('First Name'),
   lastName: Joi.string().required().label('Last Name'),
-  confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation'),
+  confirmation: Joi.string().min(4).valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation'),
   tosAccepted: Joi.boolean().required().valid('Y').options({ language: { any: { allowOnly: 'must be accepted' } } }).label('Terms of Service'),
   organization: Joi.string().optional().label('Organization')
 };
@@ -57,16 +57,16 @@ const InviteLinkSchema = {
 
 const ChangePasswordSchema = {
   token: Joi.string().required().label('token'),
-  password: Joi.string().required().label('Password'),
-  confirmation: Joi.string().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
+  password: Joi.string().min(4).required().label('Password'),
+  confirmation: Joi.string().min(4).valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
 
 const UpdateUserSchema = {
   firstName: Joi.string().min(0).allow('').optional().label('Firstname'),
   lastName: Joi.string().optional().label('Lastname'),
   email: Joi.string().required().label('Email'),
-  password: Joi.string().optional(),
-  confirmation: Joi.string().valid(Joi.ref('password')).optional().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
+  password: Joi.string().min(4).optional(),
+  confirmation: Joi.string().min(4).valid(Joi.ref('password')).optional().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
 
 module.exports = {
