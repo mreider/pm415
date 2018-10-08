@@ -16,14 +16,8 @@ module.exports = {
         const decoded = Jwt.verify(req.token, Config.appKey);
 
         req.user = await UORole.getUser(decoded.userId);
-
-        req.organization = _.chain(req.user).get('organizations').find(org => {
-          return org.id === decoded.orgId;
-        }).value();
-
-        req.role = _.chain(req.organization).get('roles').find(role => {
-          return role.id === Role.AdminRoleId || role.id === Role.MemberRoleId || role.id === Role.PendingRoleId;
-        }).value();
+        req.organization = _.find(req.user.organizations, org => { return org.id === decoded.orgId; });
+        req.role = Role.sort(req.organization.roles)[0];
 
         next(null);
       } catch (error) {
@@ -58,7 +52,7 @@ module.exports = {
     if (!req.organization) {
       return res.boom.forbidden('User must be assigned to organization first', { success: false });
     }
-    if (req.role.id === Role.AdminRoleId) {
+    if (req.role.id !== Role.AdminRoleId) {
       return res.boom.unauthorized('Admin privileges required', { success: false, redirect: '/login?next=' + redirect });
     }
 
