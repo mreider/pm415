@@ -47,8 +47,7 @@ const NewOrganizationSchema = {
 };
 
 const UpdateOrganizationSchema = {
-  name: Joi.string().min(2).required().label('Name'),
-  orgId: Joi.string().required().label('orgId')
+  name: Joi.string().min(2).required().label('Name')
 };
 
 const InviteLinkSchema = {
