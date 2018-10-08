@@ -18,6 +18,7 @@ const User = require('../models/user');
 const Config = require('../config');
 
 const knex = require('../db').knex;
+const Utils = require('../utils');
 
 const { validate, NewOrganizationSchema, InviteLinkSchema, UpdateOrganizationSchema } = require('../validation');
 
@@ -102,17 +103,19 @@ router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
   res.json({ success: true, users: rows });
 });
 
-router.get('/:orgId/invitelink', async (req, res) => {
+router.get('/invitelink', async (req, res) => {
   const token = req.query.token;
 
   const validated = User.validateToken(token);
   if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, registration: 'false' });
 
-  const user = await User.where({ email: validated.data.email }).fetch();
+  const user = await User.where({ id: validated.data.userId }).fetch();
+  if (!user) return res.json({ success: false, message: 'Invitation token corrupted or expired', registration: 'false' });
 
-  if (!user) return res.json({ success: true, message: 'Invitation token corrupted or expired' });
+  const organization = await Organization.where({ id: validated.data.orgId }).fetch();
+  if (!organization) return res.json({ success: false, message: 'Invitation token corrupted or expired', registration: 'false' });
 
-  res.json({ success: true, registration: 'add', email: validated.data.email, orgId: validated.data.organization });
+  res.json({ success: true, registration: 'add', email: validated.data.email, organization_id: organization.id, orgranization_name: Utils.serialize(organization).name });
 });
 
 router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema)], async (req, res) => {
@@ -130,7 +133,7 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
 
   const currentUser = await User.where({ id: req.user.id }).fetch();
 
-  const token = await currentUser.generateToken({ expiresIn: '1d' }, { email, orgId });
+  const token = await currentUser.generateToken({ expiresIn: '1d' }, { email, orgId: orgId });
   const confirmUrl = Config.siteUrl + 'invitelink/?token=' + token;
 
   var mail = {
@@ -170,8 +173,9 @@ router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) 
 });
 
 router.put('/:orgId/admin/grant', middlewares.LoginRequired, async (req, res) => {
-  const usersId = req.body.usersid;
+  const usersId = req.body.usersId;
   const organizationId = req.params.orgId;
+  console.log('usersid', usersId, 'org', organizationId);
 
   const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
   if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
@@ -185,7 +189,7 @@ router.put('/:orgId/admin/grant', middlewares.LoginRequired, async (req, res) =>
 });
 
 router.put('/:orgId/admin/revoke', middlewares.LoginRequired, async (req, res) => {
-  const usersId = req.body.usersid;
+  const usersId = req.body.usersId;
   const organizationId = req.params.orgId;
 
   const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
