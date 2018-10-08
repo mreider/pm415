@@ -117,15 +117,19 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
   const email = req.body.email;
   const orgId = req.params.orgId;
 
-  const organization = await Organization.where({ organization_id: orgId }).fetch();
+  const organization = await Organization.where({ id: orgId }).fetch();
   if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization not found` });
 
   let user = await User.where({ email }).fetch();
   if (user) {
-    const access = await UORole.where({ user_id: user.id, organization_id: organization.id });
+    const access = await UORole.where({ userId: user.id, organizationId: organization.id });
     if (access) return res.boom.conflict('Exists', { success: false, message: `User ${email} already have access to organization ${organization.get('name')}` });
   };
-  const token = await req.user.generateToken({ expiresIn: '1d' }, { email: email, organization: organization.id });
+
+  const currentUser = await User.where({ id: req.user.id }).fetch();
+
+  const token = await currentUser.generateToken({ expiresIn: '1d' }, { email, orgId });
+  const confirmUrl = Config.siteUrl + 'invitelink/?token=' + token;
 
   var mail = {
     from: Config.mailerConfig.from,
@@ -133,12 +137,12 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
     subject: 'invitelink',
     template: 'invite-link-registration',
     context: {
-      confirm_url: Config.siteUrl + 'invitelink/?token=' + token
+      confirm_url: confirmUrl
     }
   };
 
   mailer.sendMail(mail);
-  return res.json({ success: true, organization, user: req.user, token });
+  return res.json({ success: true, confirmUrl });
 });
 
 router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) => {
