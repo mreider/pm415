@@ -17,6 +17,8 @@ const User = require('../models/user');
 
 const Config = require('../config');
 
+const knex = require('../db').knex;
+
 const { validate, NewOrganizationSchema, InviteLinkSchema, UpdateOrganizationSchema } = require('../validation');
 
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
@@ -160,32 +162,37 @@ router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) 
 
   const remainsAdmins = _.difference(currentAdmins, usersId);
 
-  if (remainsAdmins.length < 1) return res.boom.conflict('Conflict', {success: false, message: 'At least one admin must remains in'})
+  if (remainsAdmins.length < 1) return res.boom.conflict('Conflict', { success: false, message: 'At least one admin must remains in' });
 
   await UORole.where('user_id', 'IN', usersId).where('organization_id', orgId).destroy();
 
   return res.json({ success: true });
 });
 
-router.post('/:orgId/admin/grant', middlewares.OrgAdminRequired, async (req, res) => {
-  // TODO: Alex, please rewrite method from below to smaller one here
+router.put('/:orgId/admin/grant', middlewares.LoginRequired, async (req, res) => {
+  const usersId = req.body.usersid;
+  const roleId = Role.AdminRoleId;
+  const organizationId = parseInt(req.params.orgId);
+  const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: roleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+  let users = await knex('users_organizations_roles')
+    .where({ organization_id: organizationId })
+    .where('user_id', 'in', usersId)
+    .update('role_id', roleId);
+  res.json({ success: true, users });
 });
 
-router.post('/:orgId/admin/revoke', middlewares.OrgAdminRequired, async (req, res) => {
-  // TODO: Alex, please rewrite method from below to smaller one here
+router.put('/:orgId/admin/revoke', middlewares.LoginRequired, async (req, res) => {
+  const usersId = req.body.usersid;
+  const roleId = Role.MemberRoleId;
+  const organizationId = parseInt(req.params.orgId);
+  const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+  let users = await knex('users_organizations_roles')
+    .where({ organization_id: organizationId })
+    .where('user_id', 'in', usersId)
+    .update('role_id', roleId);
+  res.json({ success: true, users });
 });
-
-// TODO: Implement grant/revoke methods and remove this method
-// router.post('/changerole/users', middlewares.OrgAdminRequired, async (req, res) => {
-//   const orgId = parseInt(req.organization.id);
-//   const usersId = req.body.usersid;
-//   const roleId = req.body.roleid;
-
-//   let users = await knex('users_organizations_roles')
-//     .where({ organization_id: orgId })
-//     .where('user_id', 'in', usersId)
-//     .update('role_id', roleId);
-//   res.json({ success: true, users });
-// });
 
 module.exports = router;

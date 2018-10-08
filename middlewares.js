@@ -14,11 +14,9 @@ module.exports = {
       req.roleId = 0;
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
-
         req.user = await UORole.getUser(decoded.userId);
         req.organization = _.find(req.user.organizations, org => { return org.id === decoded.orgId; });
         req.role = Role.sort(req.organization.roles)[0];
-
         next(null);
       } catch (error) {
         next(null);
