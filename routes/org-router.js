@@ -175,7 +175,6 @@ router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) 
 router.put('/:orgId/admin/grant', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersId;
   const organizationId = req.params.orgId;
-  console.log('usersid', usersId, 'org', organizationId);
 
   const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
   if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
