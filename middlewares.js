@@ -52,6 +52,7 @@ module.exports = {
     if (!req.organization) {
       return res.boom.forbidden('User must be assigned to organization first', { success: false });
     }
+
     if (req.role.id !== Role.AdminRoleId) {
       return res.boom.unauthorized('Admin privileges required', { success: false, redirect: '/login?next=' + redirect });
     }

@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const OmitDeep = require('omit-deep');
 
 const Nodemailer = require('nodemailer');
@@ -58,7 +59,8 @@ router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
   let rows = await UORole.where('organization_id', orgId).fetchAll({ withRelated: ['user', 'role'] });
   rows = rows.map(row => {
     return {
-      userId: row.get('userId'),
+      userId: row.related('user').get('id'),
+      email: row.related('user').get('email'),
       firstName: row.related('user').get('firstName'),
       lastName: row.related('user').get('lastName'),
       role: row.related('role').get('role')
@@ -106,8 +108,8 @@ router.post('/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema
   return res.json({ success: true, organization, user: req.user, token });
 });
 
-router.post('/:orgId/users/remove', middlewares.OrgAdminRequired, async (req, res) => {
-  const usersId = req.body.usersid;
+router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) => {
+  const usersId = req.body.usersId;
   const orgId = req.params.orgId;
 
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
@@ -116,12 +118,14 @@ router.post('/:orgId/users/remove', middlewares.OrgAdminRequired, async (req, re
   const organization = await Organization.where({ id: orgId }).fetch();
   if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
 
-  let currentAdmins = await UORole({ organization_id: orgId, role_id: Role.AdminRoleId }).fetchAll();
+  let currentAdmins = await UORole.where({ organization_id: orgId, role_id: Role.AdminRoleId }).fetchAll();
   currentAdmins = currentAdmins.map(row => row.get('userId'));
 
   const remainsAdmins = _.difference(currentAdmins, usersId);
 
-  if (remainsAdmins.length < 1) return res.conflict('Conflict', {success: false, message: 'At least one admin must remains in'})
+  if (remainsAdmins.length < 1) return res.boom.conflict('Conflict', {success: false, message: 'At least one admin must remains in'})
+
+  await UORole.where('user_id', 'IN', usersId).where('organization_id', orgId).destroy();
 
   return res.json({ success: true });
 });
