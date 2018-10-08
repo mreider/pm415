@@ -23,22 +23,21 @@ const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig)
 
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
 
-router.get('/invitelink', async (req, res) => {
-  const token = req.query.token;
-
-  const validated = User.validateToken(token);
-  if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, registration: 'false' });
-
-  const user = await User.where({ email: validated.data.email }).fetch();
-
-  if (!user) return res.json({ success: true, message: 'Invitation token corrupted or expired' });
-
-  res.json({ success: true, registration: 'add', email: validated.data.email, orgId: validated.data.organization });
-});
-
 router.get('/', middlewares.LoginRequired, function (req, res) {
   const user = OmitDeep(req.user, ['password']);
   res.json({ success: true, organizations: user.organizations, current: req.organization });
+});
+
+router.post('/', [middlewares.LoginRequired, validate(NewOrganizationSchema)], async (req, res) => {
+  const name = req.body.name;
+  let organization = await Organization.where({ name }).fetch();
+  if (organization) return res.boom.conflict('Exists', { success: false, message: `Organization with name ${name} already exists` });
+  organization = await Organization.create({ name: name });
+
+  let alreadyAdmin = await UORole.where({ user_id: req.user.id, organization_id: organization.id, role_id: Role.AdminRoleId }).fetch(); // I do not know if it's right to keep the admin role id in the code
+  if (!alreadyAdmin) alreadyAdmin = await UORole.create({ user_id: req.user.id, organization_id: organization.id, role_id: Role.AdminRoleId });
+
+  return res.json({ success: true, organization, user: req.user });
 });
 
 router.post('/switch/:orgId', middlewares.LoginRequired, async (req, res) => {
@@ -51,6 +50,37 @@ router.post('/switch/:orgId', middlewares.LoginRequired, async (req, res) => {
   const token = await User.forge({ id: req.user.id }).generateToken({}, { orgId });
 
   return res.json({ success: true, organization, token });
+});
+
+router.put('/:orgId', [middlewares.LoginRequired, validate(UpdateOrganizationSchema)], async (req, res) => {
+  const name = req.body.name;
+  const orgId = req.params.orgId;
+
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  organization.set('name', name);
+  await organization.save();
+
+  return res.json({ success: true, organization });
+});
+
+router.delete('/:orgId', middlewares.LoginRequired, async (req, res) => {
+  const orgId = req.params.orgId;
+
+  const admin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!admin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const organization = await Organization.where({ id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
+
+  await UORole.where({ organization_id: orgId }).destroy();
+  await Organization.where({ id: orgId }).destroy();
+
+  return res.json({ success: true });
 });
 
 router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
@@ -70,27 +100,30 @@ router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
   res.json({ success: true, users: rows });
 });
 
-router.post('/', [middlewares.LoginRequired, validate(NewOrganizationSchema)], async (req, res) => {
-  const name = req.body.name;
-  let organization = await Organization.where({ name }).fetch();
-  if (organization) return res.boom.conflict('Exists', { success: false, message: `Organization with name ${name} already exists` });
-  organization = await Organization.create({ name: name });
+router.get('/:orgId/invitelink', async (req, res) => {
+  const token = req.query.token;
 
-  let alreadyAdmin = await UORole.where({ user_id: req.user.id, organization_id: organization.id, role_id: Role.AdminRoleId }).fetch(); // I do not know if it's right to keep the admin role id in the code
-  if (!alreadyAdmin) alreadyAdmin = await UORole.create({ user_id: req.user.id, organization_id: organization.id, role_id: Role.AdminRoleId });
+  const validated = User.validateToken(token);
+  if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, registration: 'false' });
 
-  return res.json({ success: true, organization, user: req.user });
+  const user = await User.where({ email: validated.data.email }).fetch();
+
+  if (!user) return res.json({ success: true, message: 'Invitation token corrupted or expired' });
+
+  res.json({ success: true, registration: 'add', email: validated.data.email, orgId: validated.data.organization });
 });
 
-router.post('/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema)], async (req, res) => {
-  const name = req.body.name;
+router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema)], async (req, res) => {
   const email = req.body.email;
-  let organization = await Organization.where({ name }).fetch();
-  if (!organization) return res.boom.conflict('Not found', { success: false, message: `Organization with the name ${name} was not found` });
+  const orgId = req.params.orgId;
+
+  const organization = await Organization.where({ organization_id: orgId }).fetch();
+  if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization not found` });
+
   let user = await User.where({ email }).fetch();
   if (user) {
-    let uorole = await UORole.where({ user_id: user.id, organization_id: organization.id });
-    if (uorole) return res.boom.conflict('Exists', { success: false, message: `This user already have access to this organization ${email}, ${organization}` });
+    const access = await UORole.where({ user_id: user.id, organization_id: organization.id });
+    if (access) return res.boom.conflict('Exists', { success: false, message: `User ${email} already have access to organization ${organization.get('name')}` });
   };
   const token = await req.user.generateToken({ expiresIn: '1d' }, { email: email, organization: organization.id });
 
@@ -126,37 +159,6 @@ router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) 
   if (remainsAdmins.length < 1) return res.boom.conflict('Conflict', {success: false, message: 'At least one admin must remains in'})
 
   await UORole.where('user_id', 'IN', usersId).where('organization_id', orgId).destroy();
-
-  return res.json({ success: true });
-});
-
-router.put('/:orgId', [middlewares.LoginRequired, validate(UpdateOrganizationSchema)], async (req, res) => {
-  const name = req.body.name;
-  const orgId = req.params.orgId;
-
-  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
-  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
-
-  const organization = await Organization.where({ id: orgId }).fetch();
-  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
-
-  organization.set('name', name);
-  await organization.save();
-
-  return res.json({ success: true, organization });
-});
-
-router.delete('/:orgId', middlewares.LoginRequired, async (req, res) => {
-  const orgId = req.params.orgId;
-
-  const admin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
-  if (!admin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
-
-  const organization = await Organization.where({ id: orgId }).fetch();
-  if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
-
-  await UORole.where({ organization_id: orgId }).destroy();
-  await Organization.where({ id: orgId }).destroy();
 
   return res.json({ success: true });
 });
