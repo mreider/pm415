@@ -80,6 +80,5 @@ module.exports = {
   UpdateUserSchema,
   NewOrganizationSchema,
   InviteLinkSchema,
-  DeleteOrgSchema,
   UpdateOrganizationSchema
 };

@@ -18,7 +18,7 @@ const User = require('../models/user');
 
 const Config = require('../config');
 
-const { validate, NewOrganizationSchema, InviteLinkSchema, DeleteOrgSchema, UpdateOrganizationSchema } = require('../validation');
+const { validate, NewOrganizationSchema, InviteLinkSchema, UpdateOrganizationSchema } = require('../validation');
 
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
 
