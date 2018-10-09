@@ -28,7 +28,8 @@ const config = {
 
       const whitelist = [
         /localhost/,
-        /zagnut.herokuapp.com/
+        /zagnut.herokuapp.com/,
+        /pm415.com/
       ];
 
       for (let i = 0; i < whitelist.length; i++) {
