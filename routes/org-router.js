@@ -96,6 +96,7 @@ router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
       email: row.related('user').get('email'),
       firstName: row.related('user').get('firstName'),
       lastName: row.related('user').get('lastName'),
+      isActive: row.related('user').get('isActive'),
       role: row.related('role').get('role')
     };
   });

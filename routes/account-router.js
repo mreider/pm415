@@ -32,8 +32,8 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   }
 
   const orgId = _.get(user.related('organizations'), 'models[0].id');
-
   const token = await user.generateToken({}, { orgId: orgId });
+
   res.json({ token: token, success: true, user: Utils.serialize(user) });
 });
 
@@ -98,7 +98,9 @@ router.post('/changepassword', validate(ChangePasswordSchema), async(req, res) =
   const token = req.body.token;
   const password = req.body.password;
   const confirmation = req.body.confirmation;
+
   let user = await User.resetPassword(token, password, confirmation);
+
   res.json({ userId: user.id, success: true, message: 'New password saved' });
 });
 
