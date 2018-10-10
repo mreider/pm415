@@ -146,14 +146,15 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
       confirm_url: confirmUrl
     }
   };
-
   mailer.sendMail(mail);
+
   return res.json({ success: true, confirmUrl });
 });
 
 router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersId;
   const orgId = req.params.orgId;
+  console.log(req.body);
 
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
   if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });

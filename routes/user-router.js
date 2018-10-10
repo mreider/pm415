@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const UUID4 = require('uuid/v4');
 const Express = require('express');
 
@@ -67,6 +66,7 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
 
 router.get('/apikey', function(req, res) {
   const apikey = Utils.serialize(req.user).apiKey;
+
   res.json({ success: true, apikey: apikey });
 });
 
@@ -75,6 +75,7 @@ router.post('/apikey', async(req, res) => {
 
   await knex('users').where({ id: req.user.id }).update('api_key', apiKey);
   req.user.apiKey = apiKey;
+
   res.json({ success: true, apiKey });
 });
 
