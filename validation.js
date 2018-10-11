@@ -31,7 +31,8 @@ const RegisterSchema = {
   lastName: Joi.string().required().label('Last Name'),
   confirmation: Joi.string().min(4).valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation'),
   tosAccepted: Joi.boolean().required().valid('Y').options({ language: { any: { allowOnly: 'must be accepted' } } }).label('Terms of Service'),
-  organization: Joi.string().optional().label('Organization')
+  organization: Joi.string().optional().label('Organization'),
+  token: Joi.string().optional()
 };
 
 const VerifySchema = {

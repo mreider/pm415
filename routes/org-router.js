@@ -104,19 +104,19 @@ router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
   res.json({ success: true, users: rows });
 });
 
-router.get('/invitelink', async (req, res) => {
+router.get('/invite', async (req, res) => {
   const token = req.query.token;
 
   const validated = User.validateToken(token);
-  if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, registration: 'false' });
+  if (!validated.valid || !validated.data || !validated.data.userId || !validated.data.orgId) return res.boom.badData('Bad data', { success: false });
 
   const user = await User.where({ id: validated.data.userId }).fetch();
-  if (!user) return res.json({ success: false, message: 'Invitation token corrupted or expired', registration: 'false' });
+  if (!user) return res.boom.badData('Bad data', { success: false, message: 'Invitation token invalid or expired' });
 
   const organization = await Organization.where({ id: validated.data.orgId }).fetch();
-  if (!organization) return res.json({ success: false, message: 'Invitation token corrupted or expired', registration: 'false' });
+  if (!organization) return res.boom.badData('Bad data', { success: false, message: 'Invitation token invalid or expired' });
 
-  res.json({ success: true, registration: 'add', email: validated.data.email, organization_id: organization.id, orgranization_name: Utils.serialize(organization).name });
+  res.json({ success: true, email: validated.data.email, organization: organization.get('name') });
 });
 
 router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema)], async (req, res) => {
@@ -136,7 +136,7 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
   const currentUser = await User.where({ id: req.user.id }).fetch();
 
   const token = await currentUser.generateToken({ expiresIn: '1d' }, { email, orgId: orgId });
-  const confirmUrl = Config.siteUrl + 'invitelink/?token=' + token;
+  const confirmUrl = Config.siteUrl + 'account/invite/?token=' + token;
 
   var mail = {
     from: Config.mailerConfig.from,

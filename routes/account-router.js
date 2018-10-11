@@ -63,14 +63,29 @@ router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) 
 });
 
 router.post('/register', validate(RegisterSchema), async (req, res) => {
-  const email = req.body.email;
+  let email = req.body.email;
   const password = req.body.password;
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
-  const orgName = req.body.organization;
+  let orgName = req.body.organization;
+  let orgId = null;
   const confirmation = req.body.confirmation;
+  let token = req.body.token; // Used when redirected from invitation link and user already registered
 
-  // const token = req.query.token;  // Used when redirected from invitation link and user already registered
+  if (token) {
+    // User invited - get sensitive information from token, not from form
+
+    const validated = User.validateToken(token);
+
+    if (!validated.valid || !validated.data || !validated.data.email || !validated.data.orgId) {
+      return res.boom.badData('Bad data', { success: false, message: 'Invitation token invalid or expired' });
+    }
+
+    if (email !== validated.data.email) return res.boom.badData('Bad data', { success: true, message: 'Email is incorrect' });
+
+    email = validated.data.email;
+    orgId = validated.data.orgId;
+  }
 
   let user = await User.where({ email }).fetch();
   if (user) return res.boom.conflict('Exists', { success: false, message: `User with email ${email} already exists` });
@@ -78,14 +93,24 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 
   user = await User.create(email, password, firstName, lastName);
 
-  if (orgName) {
+  if (orgId) {
+    // User invited - orgId got from token
+
+    const org = await Organization.where({ id: orgId }).fetch();
+
+    if (!org) return res.boom.badData('Bad data', { success: false, message: 'Organization is incorrect' });
+
+    await UORole.create({ user_id: user.id, organization_id: orgId, role_id: Role.PendingRoleId });
+  } else if (orgName) {
+    // User registered - orgName got from form
+
     const org = Organization.forge({ name: orgName });
     await org.save();
 
     await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: Role.AdminRoleId });
   };
 
-  const token = await user.generateToken({ expiresIn: '1d' });
+  token = await user.generateToken({ expiresIn: '1d' });
   const confirmationUrl = `${Config.siteUrl}verify/?token=${token}`;
 
   var mail = {
