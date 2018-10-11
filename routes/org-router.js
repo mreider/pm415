@@ -119,6 +119,25 @@ router.get('/invite', async (req, res) => {
   res.json({ success: true, email: validated.data.email, organization: organization.get('name') });
 });
 
+router.post('/invite', middlewares.LoginRequired, async (req, res) => {
+  const token = req.body.token;
+
+  const validated = User.validateToken(token);
+  if (!validated.valid || !validated.data || !validated.data.userId || !validated.data.orgId) return res.boom.badData('Bad data', { success: false });
+
+  console.log(validated.data.userId !== req.user.id);
+
+  if (validated.data.userId !== req.user.id) return res.boom.badData('Bad data', { success: false, message: 'Invitation token invalid or expired' });
+
+  const user = await User.where({ id: validated.data.userId }).fetch();
+  if (!user) return res.boom.badData('Bad data', { success: false, message: 'Invitation token invalid or expired' });
+
+  const organization = await Organization.where({ id: validated.data.orgId }).fetch();
+  if (!organization) return res.boom.badData('Bad data', { success: false, message: 'Invitation token invalid or expired' });
+
+  res.json({ success: true, organization: organization.get('name') });
+});
+
 router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLinkSchema)], async (req, res) => {
   const email = req.body.email;
   const orgId = req.params.orgId;
@@ -135,7 +154,7 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
 
   const currentUser = await User.where({ id: req.user.id }).fetch();
 
-  const token = await currentUser.generateToken({ expiresIn: '1d' }, { email, orgId: orgId });
+  const token = await currentUser.generateToken({ expiresIn: '1d' }, { email, orgId: parseInt(orgId) });
   const confirmUrl = Config.siteUrl + 'account/invite/?token=' + token;
 
   var mail = {
