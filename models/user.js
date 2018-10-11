@@ -134,9 +134,11 @@ const User = ModelBase.extend({
 
       if (!validated.valid) return reject(new Error('Token invalid'));
       if (validated.expired) return reject(new Error({ message: 'Confirmation url expired', expired: true }));
+
       try {
         const user = await User.findById(validated.data.userId);
         if (!user) return reject(new Error('User not found'));
+
         const hash = await this.hashPassword(password);
         user.set({ password: hash });
         await user.save();
@@ -148,7 +150,7 @@ const User = ModelBase.extend({
     });
   },
 
-  async create(email, password, firstName, lastName, organization) {
+  async create(email, password, firstName, lastName) {
     const hash = await this.hashPassword(password);
     return User.forge({ email, password: hash, firstName, lastName }).save();
   }

@@ -143,7 +143,7 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
     subject: 'invitelink',
     template: 'invite-link-registration',
     context: {
-      confirm_url: confirmUrl
+      confirmationUrl: confirmUrl
     }
   };
   mailer.sendMail(mail);

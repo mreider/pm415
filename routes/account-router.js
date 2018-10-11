@@ -10,6 +10,7 @@ const Utils = require('../utils');
 const { validate, LoginSchema, RegisterSchema, ForgotPasswordSchema, ChangePasswordSchema } = require('../validation');
 
 const User = require('../models/user');
+const Organization = require('../models/organization');
 const Role = require('../models/role');
 const UORole = require('../models/users_organizations_roles');
 
@@ -43,7 +44,8 @@ router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) 
   const user = await User.where({ email }).fetch();
   if (!user) return res.boom.notFound('Not found', { success: false, message: `User with email ${email} not found.` });
 
-  const token = await user.generateToken({ expiresIn: '1d' }, { email: email });
+  const token = await user.generateToken({ expiresIn: '1d' });
+  const confirmationUrl = `${Config.siteUrl}reset-password/?token=${token}`;
 
   var mail = {
     from: Config.mailerConfig.from,
@@ -51,7 +53,7 @@ router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) 
     subject: 'Password recovery',
     template: 'forgotpassword-verification',
     context: {
-      confirm_url: Config.siteUrl + 'reset-password/?token=' + token
+      confirmationUrl
     }
   };
 
@@ -65,20 +67,26 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   const password = req.body.password;
   const firstName = req.body.firstName;
   const lastName = req.body.lastName;
-  const organization = req.body.organization;
+  const orgName = req.body.organization;
   const confirmation = req.body.confirmation;
+
+  // const token = req.query.token;  // Used when redirected from invitation link and user already registered
 
   let user = await User.where({ email }).fetch();
   if (user) return res.boom.conflict('Exists', { success: false, message: `User with email ${email} already exists` });
   if (password !== confirmation) return res.boom.conflict('Not confirmed password', { success: false, message: `Password and confirmation doesn't match` });
 
-  user = await User.create(email, password, firstName, lastName, organization);
-  if (organization) {
-    await UORole.create({ user_id: user.id, organization_id: organization, role_id: Role.PendingRoleId });
+  user = await User.create(email, password, firstName, lastName);
+
+  if (orgName) {
+    const org = Organization.forge({ name: orgName });
+    await org.save();
+
+    await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: Role.AdminRoleId });
   };
-  let data = {};
-  if (organization) data.organization = organization;
-  const token = await user.generateToken({ expiresIn: '1d' }, data);
+
+  const token = await user.generateToken({ expiresIn: '1d' });
+  const confirmationUrl = `${Config.siteUrl}verify/?token=${token}`;
 
   var mail = {
     from: Config.mailerConfig.from,
@@ -86,7 +94,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     subject: 'Email verification',
     template: 'email-verification',
     context: {
-      confirm_url: Config.siteUrl + 'verify/?token=' + token
+      confirmationUrl
     }
   };
 
