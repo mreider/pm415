@@ -6,7 +6,7 @@ const config = {
 
   keepAwake: !!process.env.KEEP_PROCESS_AWAKE,
 
-  siteUrl: 'http://localhost:3000/',
+  siteUrl: 'http://localhost:8080/',
   appKey: '097129fcba444e2dbb8c91ab7002604f7c27503fcf4b46c18708f2852cb654dc',
 
   port: process.env.PORT || 3000,
