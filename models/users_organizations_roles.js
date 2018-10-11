@@ -25,7 +25,7 @@ const UORoles = ModelBase.extend({
   // Static methods
 
   async getUser(userId) {
-    const rows = await this.where({ user_id: userId }).fetchAll({withRelated: ['user', 'role', 'organization']});
+    const rows = await this.where({ user_id: userId }).fetchAll({ withRelated: ['user', 'role', 'organization'] });
 
     let user = null;
     const organizations = {};
@@ -45,9 +45,14 @@ const UORoles = ModelBase.extend({
       org = organizations[org.get('id')];
       org.roles.push(row.related('role').toJSON());
     });
-
-    user.organizations = Object.keys(organizations).map(key => organizations[key]);
-
+    // if user just registred he does not have any records in roles
+    if (!user) {
+      user = await User.where({ id: userId }).fetch();
+      user = user.toJSON();
+      user.organizations = [];
+    } else {
+      user.organizations = Object.keys(organizations).map(key => organizations[key]);
+    }
     return user;
   }
 }

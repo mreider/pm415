@@ -30,7 +30,7 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
   const user = await User.where({ id: req.user.id }).fetch();
 
   if (req.body.password) {
-    if (req.body.password !== req.body.confirmation) return res.boom.badData('Bad data', { success: false, message: 'Confirmation must match password' })
+    if (req.body.password !== req.body.confirmation) return res.boom.badData('Bad data', { success: false, message: 'Confirmation must match password' });
 
     data.password = await User.hashPassword(req.body.password);
     passwordChanged = true;

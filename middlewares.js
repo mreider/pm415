@@ -15,8 +15,15 @@ module.exports = {
       try {
         const decoded = Jwt.verify(req.token, Config.appKey);
         req.user = await UORole.getUser(decoded.userId);
-        req.organization = _.find(req.user.organizations, org => { return org.id === decoded.orgId; });
-        req.role = Role.sort(req.organization.roles)[0];
+        // if user just registred he does not have any records in roles added check
+        if (req.user.organizations) {
+          req.organization = _.find(req.user.organizations, org => { return org.id === decoded.orgId; });
+          if (req.organization) {
+            req.role = Role.sort(req.organization.roles)[0];
+          } else {
+            req.role = Role.PendingRoleId;
+          }
+        }
         next(null);
       } catch (error) {
         next(null);
