@@ -18,7 +18,7 @@ const User = require('../models/user');
 const Config = require('../config');
 
 const knex = require('../db').knex;
-const Utils = require('../utils');
+// const Utils = require('../utils');
 
 const { validate, NewOrganizationSchema, InviteLinkSchema, UpdateOrganizationSchema } = require('../validation');
 

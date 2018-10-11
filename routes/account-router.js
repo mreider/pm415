@@ -103,11 +103,14 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     await UORole.create({ user_id: user.id, organization_id: orgId, role_id: Role.PendingRoleId });
   } else if (orgName) {
     // User registered - orgName got from form
-
-    const org = Organization.forge({ name: orgName });
-    await org.save();
-
-    await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: Role.AdminRoleId });
+    const org = await Organization.where({ name: orgName }).fetch();
+    let newUserRole = Role.PendingRoleId; // invited users (if org exist is a pending)
+    if (!org) {
+      const org = Organization.forge({ name: orgName });
+      await org.save();
+      newUserRole = Role.AdminRoleId; // new users (if org not exist is a admin)
+    }
+    await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: newUserRole });
   };
 
   token = await user.generateToken({ expiresIn: '1d' });
