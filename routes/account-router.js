@@ -6,6 +6,7 @@ const Handlebars = require('nodemailer-express-handlebars');
 
 const Config = require('../config');
 const Utils = require('../utils');
+const knex = require('../db').knex;
 
 const { validate, LoginSchema, RegisterSchema, ForgotPasswordSchema, ChangePasswordSchema } = require('../validation');
 
@@ -45,7 +46,7 @@ router.post('/forgotpassword', validate(ForgotPasswordSchema), async (req, res) 
   if (!user) return res.boom.notFound('Not found', { success: false, message: `User with email ${email} not found.` });
 
   const token = await user.generateToken({ expiresIn: '1d' });
-  const confirmationUrl = `${Config.siteUrl}reset-password/?token=${token}`;
+  const confirmationUrl = `${Config.siteUrl}account/reset-password/?token=${token}`;
 
   var mail = {
     from: Config.mailerConfig.from,
@@ -103,18 +104,19 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
     await UORole.create({ user_id: user.id, organization_id: orgId, role_id: Role.PendingRoleId });
   } else if (orgName) {
     // User registered - orgName got from form
-    const org = await Organization.where({ name: orgName }).fetch();
+    let org = await Organization.where({ name: orgName }).fetch();
     let newUserRole = Role.PendingRoleId; // invited users (if org exist is a pending)
     if (!org) {
-      const org = Organization.forge({ name: orgName });
+      org = Organization.forge({ name: orgName });
       await org.save();
+
       newUserRole = Role.AdminRoleId; // new users (if org not exist is a admin)
     }
     await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: newUserRole });
   };
 
   token = await user.generateToken({ expiresIn: '1d' });
-  const confirmationUrl = `${Config.siteUrl}verify/?token=${token}`;
+  const confirmationUrl = `${Config.siteUrl}account/verify/?token=${token}`;
 
   var mail = {
     from: Config.mailerConfig.from,
@@ -139,5 +141,52 @@ router.post('/changepassword', validate(ChangePasswordSchema), async(req, res) =
 
   res.json({ userId: user.id, success: true, message: 'New password saved' });
 });
+
+router.get('/verify', async (req, res) => {
+  const token = req.query.token;
+
+  const validated = User.validateToken(token);
+  if (!validated.valid || !validated.data || !validated.data.userId) return   res.json({ success: false, message: 'Token is invalid or expired.' });
+
+  const user = await User.where({ id: validated.data.userId }).fetch();
+  if (!user) return res.json({ success: false, message: 'User not found' });
+  user.set({ isActive: true, confirmedAt: new Date() });
+  await user.save();
+
+  // send mail admins
+  if (validated.data.organization) {
+    const uorole = await UORole.where({ user_id: Number(validated.data.userId), organization_id: Number(validated.data.organization) }).fetch();
+    if (uorole) return res.json({ success: true, message: 'User already confirmed' });
+    let users = await knex('users_organizations_roles').select('u.email', 'o.name as organization')
+      .leftJoin('users as u', 'users_organizations_roles.user_id', 'u.id')
+      .leftJoin('organizations as o', 'users_organizations_roles.organization_id', 'o.id')
+      .where({ organization_id: validated.data.organization, role_id: Role.AdminRoleId, 'is_active': 1 });
+    let data = {};
+    if (user.get('firstName')) data.firstName = user.get('firstName');
+    if (user.get('lastName')) data.lastName = user.get('lastName');
+    if (user.get('email')) data.email = user.get('email');
+    users = Utils.serialize(users);
+    users.createdUser = data;
+    users.forEach(sendMail, data);
+  }
+
+  res.json({ userId: Utils.serialize(user).id, success: true, message: 'User registration is completed, lets go login' });
+});
+
+function sendMail(value) {
+  var mail = {
+    from: Config.mailerConfig.from,
+    to: value.email,
+    subject: 'Authorization pending for' + this.firstName + ' ' + this.lastName,
+    template: 'admin-info_pending',
+    context: {
+      firstName: this.firstName,
+      lastName: this.firstName,
+      email: this.email,
+      organization: value.organization
+    }
+  };
+  mailer.sendMail(mail);
+}
 
 module.exports = router;
