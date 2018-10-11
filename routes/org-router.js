@@ -127,8 +127,9 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
   if (!organization) return res.boom.notFound('Not found', { success: false, message: `Organization not found` });
 
   let user = await User.where({ email }).fetch();
+
   if (user) {
-    const access = await UORole.where({ userId: user.id, organizationId: organization.id });
+    const access = await UORole.where({ user_id: user.id, organization_id: organization.id }).fetch();
     if (access) return res.boom.conflict('Exists', { success: false, message: `User ${email} already have access to organization ${organization.get('name')}` });
   };
 
