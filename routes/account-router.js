@@ -20,8 +20,21 @@ const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig)
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
 
 router.post('/login', validate(LoginSchema), async (req, res) => {
-  const email = req.body.email;
+  let email = req.body.email;
   const password = req.body.password;
+  let token = req.body.token;
+  let orgId;
+
+  if (token) {
+    const validated = User.validateToken(token);
+    if (!validated.valid || !validated.data || !validated.data.email || !validated.data.orgId) return res.boom.badData('Bad data', { success: false });
+
+    const invitedEmail = validated.data.email;
+    if (email !== invitedEmail) return res.boom.badData('Bad data', { success: false, message: 'Invitation email mismatch' });
+
+    email = invitedEmail;
+    orgId = validated.data.orgId;
+  }
 
   const user = await User.where({ email }).fetch({ withRelated: ['organizations'] });
   if (!user) return res.boom.notFound('Not found', { success: false, message: `User with email ${email} not found.` });
@@ -33,8 +46,20 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
     return res.boom.unauthorized('Unauthorized', {success: true, message: error.toString()});
   }
 
-  const orgId = _.get(user.related('organizations'), 'models[0].id');
-  const token = await user.generateToken({}, { orgId: orgId });
+  if (token) {
+    const organization = await Organization.where({ id: orgId }).fetch();
+    if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Invitation organization incorrect' });
+
+    const userOrgRole = await UORole.where({ user_id: user.get('id'), organization_id: orgId }).fetch;
+
+    if (userOrgRole) return res.boom.conflict('Conflict', { success: false, message: 'Invitation already accepted' });
+
+    await UORole.create({ user_id: user.get('id'), organization_id: orgId, role_id: Role.PendingRoleId });
+  }
+
+  orgId = _.get(user.related('organizations'), 'models[0].id');
+
+  token = await user.generateToken({}, { orgId: orgId });
 
   res.json({ token: token, success: true, user: Utils.serialize(user) });
 });
@@ -99,20 +124,19 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 
     const org = await Organization.where({ id: orgId }).fetch();
 
-    if (!org) return res.boom.badData('Bad data', { success: false, message: 'Organization is incorrect' });
+    if (!org) return res.boom.notFound('Not found', { success: false, message: 'Organization not found' });
 
     await UORole.create({ user_id: user.id, organization_id: orgId, role_id: Role.PendingRoleId });
   } else if (orgName) {
     // User registered - orgName got from form
     let org = await Organization.where({ name: orgName }).fetch();
-    let newUserRole = Role.PendingRoleId; // invited users (if org exist is a pending)
-    if (!org) {
-      org = Organization.forge({ name: orgName });
-      await org.save();
 
-      newUserRole = Role.AdminRoleId; // new users (if org not exist is a admin)
-    }
-    await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: newUserRole });
+    if (org) return res.boom.conflict('Conflict', { success: false, message: `Organization ${orgName} already exists.` });
+
+    org = Organization.forge({ name: orgName });
+    await org.save();
+
+    await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: Role.AdminRoleId });
   };
 
   token = await user.generateToken({ expiresIn: '1d' });

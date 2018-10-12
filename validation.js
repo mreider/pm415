@@ -21,7 +21,8 @@ const validate = (schema, source) => {
 
 const LoginSchema = {
   email: Joi.string().required().label('Email'),
-  password: Joi.string().required().label('Password')
+  password: Joi.string().required().label('Password'),
+  token: Joi.string().optional()
 };
 
 const RegisterSchema = {
