@@ -43,7 +43,7 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   try {
     await user.checkPassword(password);
   } catch (error) {
-    return res.boom.unauthorized('Unauthorized', {success: true, message: error.toString()});
+    return res.boom.unauthorized('Unauthorized', { success: true, message: 'Unable to login user'; });
   }
 
   if (token) {
@@ -170,7 +170,7 @@ router.get('/verify', async (req, res) => {
   const token = req.query.token;
 
   const validated = User.validateToken(token);
-  if (!validated.valid || !validated.data || !validated.data.userId) return   res.json({ success: false, message: 'Token is invalid or expired.' });
+  if (!validated.valid || !validated.data || !validated.data.userId) return res.json({ success: false, message: 'Token is invalid or expired.' });
 
   const user = await User.where({ id: validated.data.userId }).fetch();
   if (!user) return res.json({ success: false, message: 'User not found' });

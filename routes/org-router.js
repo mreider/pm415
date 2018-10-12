@@ -155,9 +155,11 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
 router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersId;
   const orgId = req.params.orgId;
+  let himself = false;
+  if (usersId.length === 1 && usersId[0] === req.user.id) himself = true;
 
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
-  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+  if (!isAdmin && !himself) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
 
   const organization = await Organization.where({ id: orgId }).fetch();
   if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Organization not found.' });
@@ -201,7 +203,43 @@ router.put('/:orgId/admin/revoke', middlewares.LoginRequired, async (req, res) =
     .where('user_id', 'in', usersId)
     .update('role_id', Role.MemberRoleId);
 
-  res.json({ success: true, users });
+  res.json({ success: true, users, message: 'Now users are members' });
 });
+
+router.put('/:orgId/admin/resetpassword', middlewares.LoginRequired, async (req, res) => {
+  const usersId = req.body.usersId;
+  const organizationId = req.params.orgId;
+
+  const isAdmin = await UORole.where({ organization_id: organizationId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+  if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
+
+  const users = await User.where('id', 'in', usersId).fetchAll();
+  await users.forEach(newPasswordAndSendMail);
+  return res.json({ success: true, users });
+});
+
+function newPasswordAndSendMail(user) {
+  return new Promise(async (resolve, reject) => {
+    const randomstring = Math.random().toString(36).slice(-8);
+    try {
+      const hash = await User.hashPassword(randomstring);
+      user.set({ password: hash });
+      await user.save();
+      var mail = {
+        from: Config.mailerConfig.from,
+        to: user.get('email'),
+        subject: 'Password reset',
+        template: 'admin-change-password',
+        context: {
+          newpassword: randomstring
+        }
+      };
+      mailer.sendMail(mail);
+      resolve(user);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 module.exports = router;
