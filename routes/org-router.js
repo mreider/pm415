@@ -18,7 +18,7 @@ const User = require('../models/user');
 const Config = require('../config');
 
 const knex = require('../db').knex;
-const Utils = require('../utils');
+// const Utils = require('../utils');
 
 const { validate, NewOrganizationSchema, InviteLinkSchema, UpdateOrganizationSchema } = require('../validation');
 
@@ -124,9 +124,6 @@ router.post('/invite', middlewares.LoginRequired, async (req, res) => {
 
   const validated = User.validateToken(token);
   if (!validated.valid || !validated.data || !validated.data.userId || !validated.data.orgId) return res.boom.badData('Bad data', { success: false });
-
-  console.log(validated.data.userId !== req.user.id);
-
   if (validated.data.userId !== req.user.id) return res.boom.badData('Bad data', { success: false, message: 'Invitation token invalid or expired' });
 
   const user = await User.where({ id: validated.data.userId }).fetch();
@@ -174,7 +171,6 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
 router.post('/:orgId/users/remove', middlewares.LoginRequired, async (req, res) => {
   const usersId = req.body.usersId;
   const orgId = req.params.orgId;
-  console.log(req.body);
 
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
   if (!isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization admin privileges required' });
