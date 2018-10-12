@@ -43,15 +43,14 @@ router.post('/login', validate(LoginSchema), async (req, res) => {
   try {
     await user.checkPassword(password);
   } catch (error) {
-    return res.boom.unauthorized('Unauthorized', { success: true, message: 'Unable to login user'; });
+    return res.boom.unauthorized('Unauthorized', { success: true, message: 'Unable to login user' });
   }
 
   if (token) {
     const organization = await Organization.where({ id: orgId }).fetch();
     if (!organization) return res.boom.notFound('Not found', { success: false, message: 'Invitation organization incorrect' });
 
-    const userOrgRole = await UORole.where({ user_id: user.get('id'), organization_id: orgId }).fetch;
-
+    const userOrgRole = await UORole.where({ user_id: user.get('id'), organization_id: orgId }).fetch();
     if (userOrgRole) return res.boom.conflict('Conflict', { success: false, message: 'Invitation already accepted' });
 
     await UORole.create({ user_id: user.get('id'), organization_id: orgId, role_id: Role.PendingRoleId });
@@ -117,15 +116,13 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   if (user) return res.boom.conflict('Exists', { success: false, message: `User with email ${email} already exists` });
   if (password !== confirmation) return res.boom.conflict('Not confirmed password', { success: false, message: `Password and confirmation doesn't match` });
 
-  user = await User.create(email, password, firstName, lastName);
-
   if (orgId) {
     // User invited - orgId got from token
 
     const org = await Organization.where({ id: orgId }).fetch();
 
     if (!org) return res.boom.notFound('Not found', { success: false, message: 'Organization not found' });
-
+    user = await User.create(email, password, firstName, lastName);
     await UORole.create({ user_id: user.id, organization_id: orgId, role_id: Role.PendingRoleId });
   } else if (orgName) {
     // User registered - orgName got from form
@@ -135,7 +132,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
 
     org = Organization.forge({ name: orgName });
     await org.save();
-
+    user = await User.create(email, password, firstName, lastName);
     await UORole.create({ user_id: user.id, organization_id: org.get('id'), role_id: Role.AdminRoleId });
   };
 
