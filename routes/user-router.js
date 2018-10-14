@@ -47,14 +47,18 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
 
   try {
     if (emailChanged) {
-      data.confirmedAt = null;
-      data.isActive = false;
+      // TODO: Send confirmation email
+      // data.confirmedAt = null;
+      // data.isActive = false;
     }
 
     user.set(data);
     await user.save();
 
     if (emailChanged) {
+      // TODO: Send confirmation email delete after
+      emailChanged = false;
+      passwordChanged = false;
       // TODO: Send confirmation email
     }
 
