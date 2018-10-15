@@ -42,7 +42,7 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
     if (emailsCount > 0) return res.boom.conflict('Conflict', { success: false, message: `Email ${req.body.email} already registered` });
 
     data.email = req.body.email;
-    emailChanged = true;
+    // emailChanged = true;
   }
 
   try {
