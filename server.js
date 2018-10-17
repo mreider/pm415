@@ -17,6 +17,7 @@ const UserRouter = require('./routes/user-router');
 const OrgRouter = require('./routes/org-router');
 const ApplicationRouter = require('./routes/app-router');
 const ErrorHandler = require('./routes/error-handler');
+const BacklogsRouter = require('./routes/backlogs-router');
 const UserTokenMiddleware = require('./middlewares').UserTokenMiddleware;
 // const db = require('./db');
 
@@ -54,6 +55,7 @@ const promiseApp = async () => {
     app.use('/api/account', AccountRouter);
     app.use('/api/user', UserRouter);
     app.use('/api/org', OrgRouter);
+    app.use('/api/backlogs', BacklogsRouter);
 
     app.use(ErrorHandler);
 
