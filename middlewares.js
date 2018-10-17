@@ -6,6 +6,7 @@ const Config = require('./config');
 
 const Role = require('./models/role');
 const UORole = require('./models/users_organizations_roles');
+const User = require('./models/user');
 
 module.exports = {
   UserTokenMiddleware: () => {
@@ -13,16 +14,24 @@ module.exports = {
       if (!req.token) return next(null);
       req.roleId = 0;
       try {
-        const decoded = Jwt.verify(req.token, Config.appKey);
-        req.user = await UORole.getUser(decoded.userId);
-        // if user just registred he does not have any records in roles added check
-        if (req.user.organizations) {
-          req.organization = _.find(req.user.organizations, org => { return org.id === decoded.orgId; });
-          if (req.organization) {
-            req.role = Role.sort(req.organization.roles)[0];
-          } else {
-            req.role = Role.PendingRoleId;
+        const user = await User.where({ api_key: req.token }).fetch();
+        if (user) {
+          req.user = await UORole.getUser(user.id);
+          if (req.user.organizations) {
+            req.organization = req.user.organizations[0];
           }
+        } else {
+          const decoded = Jwt.verify(req.token, Config.appKey);
+          req.user = await UORole.getUser(decoded.userId);
+          // if user just registred he does not have any records in roles added check
+          if (req.user.organizations) {
+            req.organization = _.find(req.user.organizations, org => { return org.id === decoded.orgId; });
+          }
+        }
+        if (req.organization) {
+          req.role = Role.sort(req.organization.roles)[0];
+        } else {
+          req.role = Role.PendingRoleId;
         }
         next(null);
       } catch (error) {

@@ -55,11 +55,13 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
     user.set(data);
     await user.save();
 
+    // TODO: Send confirmation email delete after
+    emailChanged = false;
+    passwordChanged = false;
+    // TODO: Send confirmation email
+
     if (emailChanged) {
-      // TODO: Send confirmation email delete after
-      emailChanged = false;
-      passwordChanged = false;
-      // TODO: Send confirmation email
+
     }
 
     res.json({ success: true, doLogout: emailChanged || passwordChanged, user: req.user });
