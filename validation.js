@@ -71,6 +71,24 @@ const UpdateUserSchema = {
   confirmation: Joi.string().min(4).valid(Joi.ref('password')).optional().options({ language: { any: { allowOnly: 'must match password' } } }).label('Confirmation')
 };
 
+const BackLogsSelectSchema = {
+  backlogsId: Joi.array().required().label('backlogsId'),
+  fullSelect: Joi.boolean().required().label('fullSelect')
+};
+
+const UpdateBacklogSchema = {
+  assignee: Joi.string().min(0).allow('').optional().label('Assignee'),
+  organizationId: Joi.string().optional().label('OrganizationId'),
+  title: Joi.string().optional().label('Title'),
+  description: Joi.string().optional().label('Description'),
+  statusId: Joi.string().optional().label('Status id'),
+  points: Joi.string().optional().label('Points'),
+  deleted: Joi.boolean().optional().label('Deleted'),
+  forecastedRelease: Joi.date().optional(),
+  actualRelease: Joi.date().optional(),
+  plannedOn: Joi.date().optional()
+};
+
 module.exports = {
   validate: validate,
   LoginSchema,
@@ -81,5 +99,7 @@ module.exports = {
   UpdateUserSchema,
   NewOrganizationSchema,
   InviteLinkSchema,
-  UpdateOrganizationSchema
+  UpdateOrganizationSchema,
+  BackLogsSelectSchema,
+  UpdateBacklogSchema
 };
