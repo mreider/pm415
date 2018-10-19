@@ -77,13 +77,23 @@ const BackLogsSelectSchema = {
 };
 
 const UpdateBacklogSchema = {
-  assignee: Joi.string().min(0).allow('').optional().label('Assignee'),
+  assignee: Joi.string().min(4).optional().label('Assignee'),
   organizationId: Joi.string().optional().label('OrganizationId'),
   title: Joi.string().optional().label('Title'),
   description: Joi.string().optional().label('Description'),
   statusId: Joi.string().optional().label('Status id'),
   points: Joi.string().optional().label('Points'),
-  deleted: Joi.boolean().optional().label('Deleted'),
+  forecastedRelease: Joi.date().optional(),
+  actualRelease: Joi.date().optional(),
+  plannedOn: Joi.date().optional()
+};
+
+const CreateBacklogSchema = {
+  assignee: Joi.string().min(4).optional().label('Assignee'),
+  title: Joi.string().required().label('Title'),
+  description: Joi.string().required().label('Description'),
+  statusId: Joi.string().optional().label('Status id'),
+  points: Joi.string().optional().label('Points'),
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
   plannedOn: Joi.date().optional()
@@ -101,5 +111,6 @@ module.exports = {
   InviteLinkSchema,
   UpdateOrganizationSchema,
   BackLogsSelectSchema,
-  UpdateBacklogSchema
+  UpdateBacklogSchema,
+  CreateBacklogSchema
 };
