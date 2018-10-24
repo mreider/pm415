@@ -89,7 +89,7 @@ const UpdateBacklogSchema = {
 };
 
 const CreateBacklogSchema = {
-  assignee: Joi.string().min(4).optional().label('Assignee'),
+  assignee: Joi.string().min(1).optional().label('Assignee'),
   title: Joi.string().required().label('Title'),
   description: Joi.string().required().label('Description'),
   statusId: Joi.string().optional().label('Status id'),

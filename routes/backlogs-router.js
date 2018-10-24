@@ -63,7 +63,6 @@ router.put('/new/:orgId', [middlewares.LoginRequired, validate(CreateBacklogSche
   data.created_by = req.user.id;
   if (JSON.stringify(data) === '{}') return res.boom.conflict('Conflict', { success: false, message: 'No data to create new backlog' });
   if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
-
   const backlog = await Backlog.create(data);
   res.json({ success: true, backlog });
 });
