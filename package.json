@@ -26,6 +26,7 @@
     "body-parser": "^1.18.3",
     "bookshelf": "^0.13.3",
     "bookshelf-camelcase": "^2.0.1",
+    "bookshelf-eloquent": "^0.1.15",
     "bookshelf-modelbase": "^2.10.4",
     "connect-history-api-fallback": "^1.5.0",
     "cors": "^2.8.4",

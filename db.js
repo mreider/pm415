@@ -6,7 +6,7 @@ const knex = require('knex')({
 });
 
 const bookshelf = require('bookshelf')(knex);
-bookshelf.plugin(['virtuals', 'registry', 'bookshelf-camelcase']);
+bookshelf.plugin(['virtuals', 'registry', 'bookshelf-camelcase', 'bookshelf-eloquent']);
 
 const modelBase = require('bookshelf-modelbase')(bookshelf);
 
