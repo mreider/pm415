@@ -2,14 +2,14 @@ const ModelBase = require('../db').modelBase;
 const Bookshelf = require('../db').bookshelf;
 
 // const Organization = require('./organization');
-// const User = require('./user');
+const User = require('./user');
 
 const Backlogs = ModelBase.extend({
-  tableName: 'Backlogs'
+  tableName: 'Backlogs',
   // Association
-  // organization() {
-  //   return this.belongsTo(Organization);
-  // }
+  Author() {
+    return this.belongsTo(User, 'created_by');
+  }
 },
 {
   fieldsToShow(fullSelect) {

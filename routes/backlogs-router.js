@@ -11,17 +11,12 @@ const { validate, CreateBacklogSchema, BackLogsSelectSchema, UpdateBacklogSchema
 
 // list of available backlogs for a particular organization, and whether the user is an admin
 router.get('/:orgId', middlewares.LoginRequired, async function(req, res) {
-  const orgId = parseInt(req.params.orgId);
-  let rows = await Backlog.where({ organization_id: orgId }).fetchAll();
+  const orgId = parseInt(req.params.orgId); // Backlog.fieldsToShow(false, 'User')
+  let rows = await Backlog.where({ organization_id: orgId }).fetchAll({ withRelated: ['Author'] });
+  // console.log(rows);
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
   if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
-
-  rows = rows.map(row => {
-    return {
-      backlogId: row.get('id')
-    };
-  });
 
   res.json({ success: true, backlogs: rows, admin: !!isAdmin });
 });
