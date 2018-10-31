@@ -6,19 +6,41 @@ const Role = require('../models/role');
 const Backlog = require('../models/backlog');
 const middlewares = require('../middlewares');
 const _ = require('lodash');
+const knex = require('../db').knex;
+const Utils = require('../utils');
 
 const { validate, CreateBacklogSchema, BackLogsSelectSchema, UpdateBacklogSchema } = require('../validation');
 
 // list of available backlogs for a particular organization, and whether the user is an admin
 router.get('/:orgId', middlewares.LoginRequired, async function(req, res) {
-  const orgId = parseInt(req.params.orgId); // Backlog.fieldsToShow(false, 'User')
-  let rows = await Backlog.where({ organization_id: orgId }).fetchAll({ withRelated: ['Author'] });
-  // console.log(rows);
+  const orgId = parseInt(req.params.orgId);
+  const columns = Backlog.fieldsToShow(false, 'b.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName']).columns;
+  let rows = await knex('backlogs as b').select(columns)
+    .leftJoin('users as u', 'b.created_by', 'u.id')
+    .where({ organization_id: orgId });
+  rows = Utils.serialize(rows);
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
   if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
 
   res.json({ success: true, backlogs: rows, admin: !!isAdmin });
+});
+
+// one backlog info
+router.get('/:orgId/:backlogId', middlewares.LoginRequired, async function(req, res) {
+  const orgId = parseInt(req.params.orgId);
+  const backlogId = parseInt(req.params.backlogId);
+  const columns = Backlog.fieldsToShow(true, 'b.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName']).columns;
+  let rows = await knex('backlogs as b').select(columns)
+    .leftJoin('users as u', 'b.created_by', 'u.id')
+    .where({ organization_id: orgId })
+    .where('b.id', '=', backlogId);
+  rows = Utils.serialize(rows);
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+
+  if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+
+  res.json({ success: true, backlog: rows[0], admin: !!isAdmin });
 });
 
 // awalible backlogs 2 type of returned data for list(FullSelect = false) and for element (FullSelect = true)
