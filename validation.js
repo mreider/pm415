@@ -77,7 +77,7 @@ const BackLogsSelectSchema = {
 };
 
 const UpdateBacklogSchema = {
-  assignee: Joi.string().min(4).optional().label('Assignee'),
+  assignee: Joi.string().min(1).optional().label('Assignee'),
   organizationId: Joi.string().optional().label('OrganizationId'),
   title: Joi.string().optional().label('Title'),
   description: Joi.string().optional().label('Description'),

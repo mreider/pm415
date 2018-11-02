@@ -2,6 +2,7 @@ const Express = require('express');
 
 const router = Express.Router();
 const UORole = require('../models/users_organizations_roles');
+const User = require('../models/user');
 const Role = require('../models/role');
 const Backlog = require('../models/backlog');
 const middlewares = require('../middlewares');
@@ -30,15 +31,22 @@ router.get('/:orgId', middlewares.LoginRequired, async function(req, res) {
 router.get('/:orgId/:backlogId', middlewares.LoginRequired, async function(req, res) {
   const orgId = parseInt(req.params.orgId);
   const backlogId = parseInt(req.params.backlogId);
-  const columns = Backlog.fieldsToShow(true, 'b.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName']).columns;
+  const columns = Backlog.fieldsToShow(true, 'b.').columns;
   let rows = await knex('backlogs as b').select(columns)
-    .leftJoin('users as u', 'b.created_by', 'u.id')
     .where({ organization_id: orgId })
     .where('b.id', '=', backlogId);
-  rows = Utils.serialize(rows);
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
   if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+  if (Utils.serialize(rows).length === 0) return res.boom.notFound('Not found', { success: false, message: `Backlog not found.` });
+
+  const author = await User.where({ id: rows[0].createdBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
+  const assignee = await User.where({ id: rows[0].assignee }).fetch({ columns: ['first_name', 'last_name', 'id as userId', 'email'] });
+
+  rows[0].author = Utils.serialize(author);
+  if (assignee) rows[0].assignee = Utils.serialize(assignee);
+  if (!assignee) rows[0].assignee = { firstName: '', lastName: '', email: '', id: 0 };
+  rows = Utils.serialize(rows);
 
   res.json({ success: true, backlog: rows[0], admin: !!isAdmin });
 });
