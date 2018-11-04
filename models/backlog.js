@@ -4,6 +4,7 @@ const _ = require('lodash');
 
 // const Organization = require('./organization');
 const User = require('./user');
+const Status = require('./statuses');
 
 const Backlogs = ModelBase.extend({
   tableName: 'Backlogs',
@@ -13,6 +14,9 @@ const Backlogs = ModelBase.extend({
   },
   Assignee() {
     return this.belongsTo(User, 'assignee');
+  },
+  Status() {
+    return this.belongsTo(Status, 'status_id');
   }
 },
 {

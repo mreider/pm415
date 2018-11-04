@@ -5,6 +5,7 @@ const UORole = require('../models/users_organizations_roles');
 const User = require('../models/user');
 const Role = require('../models/role');
 const Backlog = require('../models/backlog');
+const Statuses = require('../models/statuses');
 const middlewares = require('../middlewares');
 const _ = require('lodash');
 const knex = require('../db').knex;
@@ -74,6 +75,17 @@ router.put('/edit/:orgId/:backlogId', [middlewares.LoginRequired, validate(Updat
   const backlog = await Backlog.where({ organization_id: orgId }).where('id', '=', backlogId).fetch();
   if (!backlog) return res.boom.notFound('Not found', { success: false, message: `Backlog with ID ${backlogId} not found.` });
 
+  const oldStatusId = backlog.get('statusId');
+  const newStatusId = Number.parseInt(data.statusId);
+  if (oldStatusId !== newStatusId) {
+    if (newStatusId === Statuses.statusPlannedId) data.plannedOn = new Date();
+    if (newStatusId === Statuses.statusDoneId) data.actualRelease = new Date();
+    if (newStatusId === Statuses.statusUnplannedId) {
+      data.actualRelease = null;
+      data.plannedOn = null;
+    };
+  };
+
   backlog.set(data);
   await backlog.save();
 
@@ -88,6 +100,17 @@ router.put('/new/:orgId', [middlewares.LoginRequired, validate(CreateBacklogSche
   data.created_by = req.user.id;
   if (JSON.stringify(data) === '{}') return res.boom.conflict('Conflict', { success: false, message: 'No data to create new backlog' });
   if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+
+  const newStatusId = Number.parseInt(data.statusId);
+  if (newStatusId) {
+    if (newStatusId === Statuses.statusPlannedId) data.plannedOn = new Date();
+    if (newStatusId === Statuses.statusDoneId) data.actualRelease = new Date();
+    if (newStatusId === Statuses.statusUnplannedId) {
+      data.actualRelease = null;
+      data.plannedOn = null;
+    };
+  };
+
   const backlog = await Backlog.create(data);
   res.json({ success: true, backlog });
 });

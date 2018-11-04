@@ -12,6 +12,10 @@ const Statuses = ModelBase.extend({
   // }
 },
 {
+  statusUnplannedId: 1,
+  statusPlannedId: 2,
+  statusDoingId: 3,
+  statusDoneId: 4,
   // Static methods
   fieldsToShow() {
     return { columns: ['name', 'id'] };
