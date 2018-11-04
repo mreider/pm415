@@ -7,7 +7,7 @@ const User = require('./user');
 const Status = require('./statuses');
 
 const Backlogs = ModelBase.extend({
-  tableName: 'Backlogs',
+  tableName: 'backlogs',
   // Association
   Author() {
     return this.belongsTo(User, 'created_by');
