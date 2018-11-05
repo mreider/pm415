@@ -99,6 +99,15 @@ const CreateBacklogSchema = {
   plannedOn: Joi.date().optional()
 };
 
+const CreateCommentSchema = {
+  comment: Joi.string().required().label('Description'),
+  statusId: Joi.string().optional().label('Status id'),
+  points: Joi.string().optional().label('Points'),
+  forecastedRelease: Joi.date().optional(),
+  actualRelease: Joi.date().optional(),
+  plannedOn: Joi.date().optional()
+};
+
 module.exports = {
   validate: validate,
   LoginSchema,
@@ -112,5 +121,6 @@ module.exports = {
   UpdateOrganizationSchema,
   BackLogsSelectSchema,
   UpdateBacklogSchema,
-  CreateBacklogSchema
+  CreateBacklogSchema,
+  CreateCommentSchema
 };
