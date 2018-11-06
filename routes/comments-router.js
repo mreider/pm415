@@ -2,12 +2,14 @@ const Express = require('express');
 const router = Express.Router();
 const knex = require('../db').knex;
 const Comments = require('../models/comments');
+const UORole = require('../models/users_organizations_roles');
+const Role = require('../models/role');
 
 const middlewares = require('../middlewares');
 // const Utils = require('../utils');
-
+const { validate, CreateUpdateCommentSchema } = require('../validation');
 // new comment
-router.put('/new/:ownerTable/:orgId/:ownerId', [middlewares.LoginRequired], async function(req, res) {
+router.post('/new/:ownerTable/:orgId/:ownerId', [middlewares.LoginRequired, validate(CreateUpdateCommentSchema)], async function(req, res) {
   const ownerId = parseInt(req.params.ownerId);
   const orgId = parseInt(req.params.orgId);
   const ownerTable = req.params.ownerTable;
@@ -48,7 +50,7 @@ router.get('/get/:ownerTable/:orgId/:ownerId', middlewares.LoginRequired, async 
 });
 
 // edit comment
-router.put('/edit/:id', middlewares.LoginRequired, async function(req, res) {
+router.put('/edit/:id', [middlewares.LoginRequired, validate(CreateUpdateCommentSchema)], async function(req, res) {
   const id = parseInt(req.params.id);
   let data = req.body;
 
@@ -59,6 +61,24 @@ router.put('/edit/:id', middlewares.LoginRequired, async function(req, res) {
   await comment.save();
 
   res.json({ success: true, comment });
+});
+
+// delete comment
+router.delete('/delete/:orgId/:id', [middlewares.LoginRequired], async function(req, res) {
+  const orgId = parseInt(req.params.orgId);
+  const id = parseInt(req.params.id);
+
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+
+  const comment = await Comments.where('id', '=', id).fetch();
+  if (comment) {
+    if (comment.get('createdBy') !== req.user.id && !isAdmin) return res.boom.forbidden('Forbidden', { success: false, message: 'Only admin or owner can delete comment' });
+  } else {
+    return res.boom.forbidden('Forbidden', { success: false, message: 'backlog not found' });
+  };
+  await comment.destroy();
+
+  res.json({ success: true, comment: id, message: 'Comment deleted' });
 });
 
 module.exports = router;

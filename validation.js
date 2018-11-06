@@ -99,13 +99,8 @@ const CreateBacklogSchema = {
   plannedOn: Joi.date().optional()
 };
 
-const CreateCommentSchema = {
-  comment: Joi.string().required().label('Description'),
-  statusId: Joi.string().optional().label('Status id'),
-  points: Joi.string().optional().label('Points'),
-  forecastedRelease: Joi.date().optional(),
-  actualRelease: Joi.date().optional(),
-  plannedOn: Joi.date().optional()
+const CreateUpdateCommentSchema = {
+  comment: Joi.string().min(1).required().label('Comment')
 };
 
 module.exports = {
@@ -122,5 +117,5 @@ module.exports = {
   BackLogsSelectSchema,
   UpdateBacklogSchema,
   CreateBacklogSchema,
-  CreateCommentSchema
+  CreateUpdateCommentSchema
 };

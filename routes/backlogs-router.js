@@ -116,7 +116,7 @@ router.put('/new/:orgId', [middlewares.LoginRequired, validate(CreateBacklogSche
 });
 
 // delete backlogs
-router.delete('/:orgId/:backlogId', [middlewares.LoginRequired, validate(UpdateBacklogSchema)], async function(req, res) {
+router.delete('/:orgId/:backlogId', [middlewares.LoginRequired], async function(req, res) {
   const orgId = parseInt(req.params.orgId);
   const backlogId = parseInt(req.params.backlogId);
 
