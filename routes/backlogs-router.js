@@ -7,7 +7,6 @@ const Role = require('../models/role');
 const Backlog = require('../models/backlog');
 const Statuses = require('../models/statuses');
 const middlewares = require('../middlewares');
-const _ = require('lodash');
 const knex = require('../db').knex;
 const Utils = require('../utils');
 
@@ -23,7 +22,7 @@ router.get('/:orgId', middlewares.LoginRequired, async function(req, res) {
   rows = Utils.serialize(rows);
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
-  if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+  if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
 
   res.json({ success: true, backlogs: rows, admin: !!isAdmin });
 });
@@ -38,7 +37,7 @@ router.get('/:orgId/:backlogId', middlewares.LoginRequired, async function(req, 
     .where('b.id', '=', backlogId);
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
-  if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+  if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
   if (Utils.serialize(rows).length === 0) return res.boom.notFound('Not found', { success: false, message: `Backlog not found.` });
 
   const author = await User.where({ id: rows[0].createdBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
@@ -56,7 +55,7 @@ router.get('/:orgId/:backlogId', middlewares.LoginRequired, async function(req, 
 router.post('/:orgId', [middlewares.LoginRequired, validate(BackLogsSelectSchema)], async function(req, res) {
   const orgId = parseInt(req.params.orgId);
 
-  if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+  if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
 
   const backlogs = await Backlog.where({ organization_id: orgId }).where('id', 'in', req.body.backlogsId).fetchAll(Backlog.fieldsToShow(req.body.fullSelect));
 
@@ -70,7 +69,7 @@ router.put('/edit/:orgId/:backlogId', [middlewares.LoginRequired, validate(Updat
   let data = req.body;
 
   if (JSON.stringify(data) === '{}') return res.boom.conflict('Conflict', { success: false, message: 'No data to update' });
-  if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+  if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
 
   const backlog = await Backlog.where({ organization_id: orgId }).where('id', '=', backlogId).fetch();
   if (!backlog) return res.boom.notFound('Not found', { success: false, message: `Backlog with ID ${backlogId} not found.` });
@@ -99,7 +98,7 @@ router.put('/new/:orgId', [middlewares.LoginRequired, validate(CreateBacklogSche
   data.organization_id = orgId;
   data.created_by = req.user.id;
   if (JSON.stringify(data) === '{}') return res.boom.conflict('Conflict', { success: false, message: 'No data to create new backlog' });
-  if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+  if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
 
   const newStatusId = Number.parseInt(data.statusId);
   if (newStatusId) {
@@ -120,7 +119,7 @@ router.delete('/:orgId/:backlogId', [middlewares.LoginRequired], async function(
   const orgId = parseInt(req.params.orgId);
   const backlogId = parseInt(req.params.backlogId);
 
-  if (isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+  if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
   const backlog = await Backlog.where({ organization_id: orgId }).where('id', '=', backlogId).fetch();
@@ -133,15 +132,5 @@ router.delete('/:orgId/:backlogId', [middlewares.LoginRequired], async function(
 
   res.json({ success: true, backlog: backlogId, message: 'Backlog deleted' });
 });
-
-function isPendingUser(orgId, req) {
-  const organization = _.find(req.user.organizations, org => { return org.id === orgId; });
-  if (!organization) return true;
-
-  const RolePending = _.find(organization.roles, role => { return role.id === Role.PendingRoleId; });
-  if (RolePending) return true;
-
-  return false;
-};
 
 module.exports = router;

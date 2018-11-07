@@ -1,4 +1,6 @@
 const OmitDeep = require('omit-deep');
+const _ = require('lodash');
+const Role = require('./models/role');
 
 module.exports = exports = {};
 
@@ -18,4 +20,14 @@ exports.serialize = function(obj) {
   ]);
 
   return serialized;
+};
+
+exports.isPendingUser = function (orgId, req) {
+  const organization = _.find(req.user.organizations, org => { return org.id === orgId; });
+  if (!organization) return true;
+
+  const RolePending = _.find(organization.roles, role => { return role.id === Role.PendingRoleId; });
+  if (RolePending) return true;
+
+  return false;
 };

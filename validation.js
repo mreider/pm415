@@ -91,6 +91,36 @@ const UpdateBacklogSchema = {
 const CreateBacklogSchema = {
   assignee: Joi.string().min(1).optional().label('Assignee'),
   title: Joi.string().required().label('Title'),
+  description: Joi.string().optional().label('Description'),
+  statusId: Joi.string().optional().label('Status id'),
+  points: Joi.string().optional().label('Points'),
+  forecastedRelease: Joi.date().optional(),
+  actualRelease: Joi.date().optional(),
+  plannedOn: Joi.date().optional()
+};
+
+const ItemSelectSchema = {
+  itemsId: Joi.array().required().label('itemsId'),
+  fullSelect: Joi.boolean().required().label('fullSelect')
+};
+
+const UpdateItemSchema = {
+  assignee: Joi.string().min(1).optional().label('Assignee'),
+  organizationId: Joi.string().optional().label('OrganizationId'),
+  title: Joi.string().optional().label('Title'),
+  description: Joi.string().optional().label('Description'),
+  statusId: Joi.string().optional().label('Status id'),
+  points: Joi.string().optional().label('Points'),
+  forecastedRelease: Joi.date().optional(),
+  actualRelease: Joi.date().optional(),
+  plannedOn: Joi.date().optional()
+};
+
+const CreateItemSchema = {
+  ownerTable: Joi.string().required().min(1).label('Owner table'),
+  ownerId: Joi.string().required().min(1).label('Owner id'),
+  assignee: Joi.string().min(1).optional().label('Assignee'),
+  title: Joi.string().required().label('Title'),
   description: Joi.string().required().label('Description'),
   statusId: Joi.string().optional().label('Status id'),
   points: Joi.string().optional().label('Points'),
@@ -117,5 +147,8 @@ module.exports = {
   BackLogsSelectSchema,
   UpdateBacklogSchema,
   CreateBacklogSchema,
-  CreateUpdateCommentSchema
+  CreateUpdateCommentSchema,
+  CreateItemSchema,
+  UpdateItemSchema,
+  ItemSelectSchema
 };
