@@ -104,24 +104,6 @@ router.get('/:orgId/users', middlewares.LoginRequired, async (req, res) => {
   res.json({ success: true, users: rows });
 });
 
-router.get('/:orgId/userslist', middlewares.LoginRequired, async (req, res) => {
-  const orgId = req.params.orgId;
-
-  let rows = await UORole.where('organization_id', orgId).fetchAll({ withRelated: ['user', 'role'] });
-  rows = rows.map(row => {
-    return {
-      userId: row.related('user').get('id'),
-      email: row.related('user').get('email'),
-      firstName: row.related('user').get('firstName'),
-      lastName: row.related('user').get('lastName'),
-      isActive: row.related('user').get('isActive'),
-      role: row.related('role').get('role')
-    };
-  });
-
-  res.json(rows);
-});
-
 router.get('/invite', async (req, res) => {
   const token = req.query.token;
 

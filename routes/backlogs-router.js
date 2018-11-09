@@ -76,6 +76,7 @@ router.put('/edit/:orgId/:backlogId', [middlewares.LoginRequired, validate(Updat
 
   const oldStatusId = backlog.get('statusId');
   const newStatusId = Number.parseInt(data.statusId);
+  // switch else if todo
   if (oldStatusId !== newStatusId) {
     if (newStatusId === Statuses.statusPlannedId) data.plannedOn = new Date();
     if (newStatusId === Statuses.statusDoneId) data.actualRelease = new Date();
@@ -91,16 +92,18 @@ router.put('/edit/:orgId/:backlogId', [middlewares.LoginRequired, validate(Updat
   res.json({ success: true, backlog });
 });
 
-// new backlog
+// new backlog POST
 router.put('/new/:orgId', [middlewares.LoginRequired, validate(CreateBacklogSchema)], async function(req, res) {
   const orgId = parseInt(req.params.orgId);
   let data = req.body;
   data.organization_id = orgId;
   data.created_by = req.user.id;
-  if (JSON.stringify(data) === '{}') return res.boom.conflict('Conflict', { success: false, message: 'No data to create new backlog' });
+
+  // if (JSON.stringify(data) === '{}') return res.boom.conflict('Conflict', { success: false, message: 'No data to create new backlog' }); // todo baddata ()
   if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
 
   const newStatusId = Number.parseInt(data.statusId);
+  // switch else if todo
   if (newStatusId) {
     if (newStatusId === Statuses.statusPlannedId) data.plannedOn = new Date();
     if (newStatusId === Statuses.statusDoneId) data.actualRelease = new Date();
