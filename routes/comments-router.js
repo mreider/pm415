@@ -4,10 +4,21 @@ const knex = require('../db').knex;
 const Comments = require('../models/comments');
 const UORole = require('../models/users_organizations_roles');
 const Role = require('../models/role');
+const Item = require('../models/items');
 
 const middlewares = require('../middlewares');
-// const Utils = require('../utils');
+const Utils = require('../utils');
 const { validate, CreateUpdateCommentSchema } = require('../validation');
+
+const Nodemailer = require('nodemailer');
+const SendGridTransport = require('nodemailer-sendgrid-transport');
+const Handlebars = require('nodemailer-express-handlebars');
+
+const Config = require('../config');
+
+const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
+mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
+
 // new comment
 router.post('/new/:ownerTable/:orgId/:ownerId', [middlewares.LoginRequired, validate(CreateUpdateCommentSchema)], async function(req, res) {
   const ownerId = parseInt(req.params.ownerId);
@@ -30,7 +41,19 @@ router.post('/new/:ownerTable/:orgId/:ownerId', [middlewares.LoginRequired, vali
     haveOwner = false;
   }
   if (!haveOwner) return res.boom.notFound('Not found', { success: false, message: `Owner not found.` });
+
+  let mailers = '';
+  if (data.mailers) {
+    data.mailers.forEach(el => {
+      mailers = mailers + '!' + el + '!';
+    });
+  };
+  data.mailers = mailers;
+
   const comment = await Comments.create(data);
+
+  sendNotice(Utils.serialize(comment));
+
   res.json({ success: true, comment });
 });
 
@@ -45,7 +68,6 @@ router.get('/get/:ownerTable/:orgId/:ownerId', middlewares.LoginRequired, async 
   } catch (error) {
     return res.boom.notFound('Not found', { success: false, message: `Comments not found.` });
   };
-
   res.json({ success: true, comments });
 });
 
@@ -57,8 +79,18 @@ router.put('/edit/:id', [middlewares.LoginRequired, validate(CreateUpdateComment
   const comment = await Comments.where({ id: id }).fetch();
   if (!comment) return res.boom.notFound('Not found', { success: false, message: `Comments not found.` });
 
+  let mailers = '';
+  if (data.mailers) {
+    data.mailers.forEach(el => {
+      mailers = mailers + '!' + el + '!';
+    });
+  };
+  data.mailers = mailers;
+
   comment.set(data);
   await comment.save();
+
+  sendNotice(Utils.serialize(comment));
 
   res.json({ success: true, comment });
 });
@@ -80,5 +112,31 @@ router.delete('/delete/:orgId/:id', [middlewares.LoginRequired], async function(
 
   res.json({ success: true, comment: id, message: 'Comment deleted' });
 });
+
+function sendMail(value) {
+  var mail = {
+    from: Config.mailerConfig.from,
+    to: value.email,
+    subject: 'item update',
+    template: 'comment',
+    context: {
+      href: value.href
+    }
+  };
+  mailer.sendMail(mail);
+};
+
+async function sendNotice(ncomment) {
+  const mailersWhoNeedSendMail = await Item.getAllBacklogMailers(ncomment.ownerId, ncomment.ownerTable);
+
+  if (!ncomment.organizationId) ncomment.organizationId = ncomment.organization_id;
+
+  mailersWhoNeedSendMail.forEach(el => {
+    let value = {};
+    value.href = Config.siteUrl + 'items/item/?orgId=' + ncomment.organizationId + '&itemId=' + ncomment.ownerId;
+    value.email = el;
+    sendMail(value);
+  });
+}
 
 module.exports = router;

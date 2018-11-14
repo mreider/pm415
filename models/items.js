@@ -1,6 +1,8 @@
 const ModelBase = require('../db').modelBase;
 const Bookshelf = require('../db').bookshelf;
 const _ = require('lodash');
+const knex = require('../db').knex;
+const Utils = require('../utils');
 
 // const Organization = require('./organization');
 const User = require('./user');
@@ -31,7 +33,31 @@ const Items = ModelBase.extend({
     }
     if (elementstopush) columns = _.union(elementstopush, columns);
     return { columns };
+  },
+
+  async getAllBacklogMailers(id, ownerTable) {
+    let rows = await knex(ownerTable + ' as i').select('mailers').where({ id: id });
+    rows = Utils.serialize(rows);
+    const ownerMailers = rows[0].mailers;
+
+    rows = await knex('comments' + ' as i').select('mailers').where({ owner_id: id });
+    rows = Utils.serialize(rows);
+
+    const commentMailers = rows[0].mailers;
+    const stringToPars = ownerMailers + commentMailers;
+
+    let mailers = [];
+    let result = stringToPars.match(/!.+?(!)/gi);
+    mailers.length = 0;
+
+    if (result) mailers = _.union(result);
+    mailers = mailers.map(function(el) { return el.replace(/!/g, ''); });
+
+    return mailers;
+    // temp change to emty array
+    // return [];
   }
+
   // Static methods
 }
 

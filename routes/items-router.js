@@ -91,6 +91,18 @@ router.put('/edit/:orgId/:itemId', [middlewares.LoginRequired, validate(UpdateIt
     };
   };
 
+  let mailers = '';
+  if (data.assignee) {
+    const user = await User.where({ id: parseInt(data.assignee) }).fetch();
+    if (user) mailers = mailers + '!' + Utils.serialize(user).email + '!';
+  };
+
+  if (Utils.serialize(item).createdBy) {
+    const user = await User.where({ id: (Utils.serialize(item).createdBy) }).fetch();
+    if (user) mailers = mailers + '!' + Utils.serialize(user).email + '!';
+  };
+  data.mailers = mailers;
+
   item.set(data);
   await item.save();
 
@@ -116,8 +128,19 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateItemSchema
     };
   };
 
+  let mailers = '';
+  if (data.assignee) {
+    const user = await User.where({ id: parseInt(data.assignee) }).fetch();
+    if (user) mailers = mailers + '!' + Utils.serialize(user).email + '!';
+  };
+  if (data.created_by) {
+    const user = await User.where({ id: data.created_by }).fetch();
+    if (user) mailers = mailers + '!' + Utils.serialize(user).email + '!';
+  };
+  data.mailers = mailers;
+
   const item = await Item.create(data);
-  res.json({ success: true, item });
+  res.json({ success: true, item }); // item
 });
 
 // delete item

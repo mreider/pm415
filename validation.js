@@ -113,7 +113,8 @@ const UpdateItemSchema = {
   points: Joi.string().optional().label('Points'),
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
-  plannedOn: Joi.date().optional()
+  plannedOn: Joi.date().optional(),
+  mailers: Joi.string().optional().label('Mailers')
 };
 
 const CreateItemSchema = {
@@ -126,11 +127,13 @@ const CreateItemSchema = {
   points: Joi.string().optional().label('Points'),
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
-  plannedOn: Joi.date().optional()
+  plannedOn: Joi.date().optional(),
+  mailers: Joi.string().optional().label('Mailers')
 };
 
 const CreateUpdateCommentSchema = {
-  comment: Joi.string().min(1).required().label('Comment')
+  comment: Joi.string().min(1).required().label('Comment'),
+  mailers: Joi.array().optional().label('Mailers')
 };
 
 module.exports = {
