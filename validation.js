@@ -76,6 +76,11 @@ const BackLogsSelectSchema = {
   fullSelect: Joi.boolean().required().label('fullSelect')
 };
 
+const IdeasSelectSchema = {
+  IdeasId: Joi.array().required().label('IdeasId'),
+  fullSelect: Joi.boolean().required().label('fullSelect')
+};
+
 const UpdateBacklogSchema = {
   assignee: Joi.string().min(1).optional().label('Assignee'),
   organizationId: Joi.string().optional().label('OrganizationId'),
@@ -86,6 +91,23 @@ const UpdateBacklogSchema = {
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
   plannedOn: Joi.date().optional()
+};
+
+const UpdateIdeaSchema = {
+  organizationId: Joi.string().optional().label('OrganizationId'),
+  title: Joi.string().optional().label('Title'),
+  description: Joi.string().optional().label('Description'),
+  popularity: Joi.string().optional().label('Popularity'),
+  horizon: Joi.string().optional().label('Horizon'),
+  importance: Joi.string().optional().label('Importance')
+};
+
+const CreateIdeaSchema = {
+  title: Joi.string().required().label('Title'),
+  description: Joi.string().optional().label('Description'),
+  importance: Joi.string().optional().label('Importance'),
+  popularity: Joi.string().optional().label('Popularity'),
+  horizon: Joi.string().optional().label('Horizon')
 };
 
 const CreateBacklogSchema = {
@@ -153,5 +175,8 @@ module.exports = {
   CreateUpdateCommentSchema,
   CreateItemSchema,
   UpdateItemSchema,
-  ItemSelectSchema
+  ItemSelectSchema,
+  IdeasSelectSchema,
+  UpdateIdeaSchema,
+  CreateIdeaSchema
 };

@@ -21,6 +21,7 @@ const BacklogsRouter = require('./routes/backlogs-router');
 const StatusRouter = require('./routes/statuses-router');
 const CommentsRouter = require('./routes/comments-router');
 const ItemsRouter = require('./routes/items-router');
+const IdeasRouter = require('./routes/ideas-router');
 
 const UserTokenMiddleware = require('./middlewares').UserTokenMiddleware;
 // const db = require('./db');
@@ -63,6 +64,7 @@ const promiseApp = async () => {
     app.use('/api/statuses', StatusRouter);
     app.use('/api/comments', CommentsRouter);
     app.use('/api/items', ItemsRouter);
+    app.use('/api/ideas', IdeasRouter);
 
     app.use(ErrorHandler);
 
