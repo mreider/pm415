@@ -76,8 +76,8 @@ const BackLogsSelectSchema = {
   fullSelect: Joi.boolean().required().label('fullSelect')
 };
 
-const IdeasSelectSchema = {
-  IdeasId: Joi.array().required().label('IdeasId'),
+const InitiativesSelectSchema = {
+  initiativeId: Joi.array().required().label('initiativeId'),
   fullSelect: Joi.boolean().required().label('fullSelect')
 };
 
@@ -93,19 +93,19 @@ const UpdateBacklogSchema = {
   plannedOn: Joi.date().optional()
 };
 
-const UpdateIdeaSchema = {
+const UpdateInitiativesSchema = {
   organizationId: Joi.string().optional().label('OrganizationId'),
   title: Joi.string().optional().label('Title'),
   description: Joi.string().optional().label('Description'),
   popularity: Joi.string().optional().label('Popularity'),
   horizon: Joi.string().optional().label('Horizon'),
-  importance: Joi.string().optional().label('Importance')
+  statusId: Joi.string().optional().label('Status is')
 };
 
-const CreateIdeaSchema = {
+const CreateInitiativesSchema = {
   title: Joi.string().required().label('Title'),
   description: Joi.string().optional().label('Description'),
-  importance: Joi.string().optional().label('Importance'),
+  statusId: Joi.string().optional().label('Status id'),
   popularity: Joi.string().optional().label('Popularity'),
   horizon: Joi.string().optional().label('Horizon')
 };
@@ -176,7 +176,7 @@ module.exports = {
   CreateItemSchema,
   UpdateItemSchema,
   ItemSelectSchema,
-  IdeasSelectSchema,
-  UpdateIdeaSchema,
-  CreateIdeaSchema
+  InitiativesSelectSchema,
+  UpdateInitiativesSchema,
+  CreateInitiativesSchema
 };

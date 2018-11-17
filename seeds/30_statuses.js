@@ -10,7 +10,11 @@ exports.seed = function(knex, Promise) {
         { owner_table: 'items', id: 1, name: 'Unplanned' },
         { owner_table: 'items', id: 2, name: 'Planned' },
         { owner_table: 'items', id: 3, name: 'Doing' },
-        { owner_table: 'items', id: 4, name: 'Done' }
+        { owner_table: 'items', id: 4, name: 'Done' },
+        { owner_table: 'initiatives', id: 9, name: 'Must have' },
+        { owner_table: 'initiatives', id: 10, name: 'Should have' },
+        { owner_table: 'initiatives', id: 11, name: 'Could have' },
+        { owner_table: 'initiatives', id: 12, name: "Won't have" }
       ]);
     });
 };

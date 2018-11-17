@@ -2,14 +2,21 @@ const ModelBase = require('../db').modelBase;
 const Bookshelf = require('../db').bookshelf;
 const _ = require('lodash');
 
-// const Organization = require('./organization');
+const Organization = require('./organization');
 const User = require('./user');
+const Status = require('./statuses');
 
-const Ideas = ModelBase.extend({
-  tableName: 'ideas',
+const Initiatives = ModelBase.extend({
+  tableName: 'initiatives',
   // Association
   Author() {
     return this.belongsTo(User, 'created_by');
+  },
+  Status() {
+    return this.belongsTo(Status, 'status_id');
+  },
+  Organization() {
+    return this.belongsTo(Organization, 'organization_id');
   }
 },
 {
@@ -17,7 +24,7 @@ const Ideas = ModelBase.extend({
     let columns;
 
     if (fullSelect) {
-      columns = ['created_at as createdAt', 'id', 'title', 'description', 'horizon', 'created_by as createdBy', 'importance', 'organization_id as OrganizationId'];
+      columns = ['created_at as createdAt', 'id', 'title', 'description', 'horizon', 'popularity', 'created_by as createdBy', 'status_id as statusId', 'organization_id as organizationId'];
     } else {
       columns = ['id', 'title', 'created_by as createdBy'];
     };
@@ -36,4 +43,4 @@ const Ideas = ModelBase.extend({
 
 );
 
-module.exports = Bookshelf.model('Ideas', Ideas);
+module.exports = Bookshelf.model('Initiatives', Initiatives);
