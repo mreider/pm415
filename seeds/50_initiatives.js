@@ -1,18 +1,18 @@
 exports.seed = function(knex, Promise) {
-  return knex('users').del()
+  return knex('initiatives').del()
     .then(function () {
-      return knex('users').insert([
+      return knex('initiatives').insert([
         {
           id: 1,
           title: 'aasdsadasdasdasdasd3',
           description: 'Test initiative descriprion',
           popularity: 2,
           horizon: '2018-11-15',
-          importance: 'important',
           created_by: 3,
           created_at: '2018-09-20 10:04:55.000',
           updated_at: '2018-09-20 10:04:55.000',
-          organization_id: 1
+          organization_id: 1,
+          status_id: 11
         },
         {
           id: 2,
@@ -20,11 +20,11 @@ exports.seed = function(knex, Promise) {
           description: 'Test initiative descriprion 2',
           popularity: 20,
           horizon: '2018-11-16',
-          importance: 'not important',
           created_by: 2,
           created_at: '2018-09-20 10:04:55.000',
           updated_at: '2018-09-20 10:04:55.000',
-          organization_id: 1
+          organization_id: 1,
+          status_id: 10
         },
         {
           id: 3,
@@ -32,11 +32,11 @@ exports.seed = function(knex, Promise) {
           description: 'Test initiative descriprion 3',
           popularity: 20,
           horizon: '2018-11-17',
-          importance: 'must have',
           created_by: 3,
           created_at: '2018-09-20 10:04:55.000',
           updated_at: '2018-09-20 10:04:55.000',
-          organization_id: 1
+          organization_id: 1,
+          status_id: 9
         }
       ]);
     });
