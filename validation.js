@@ -158,6 +158,13 @@ const CreateUpdateCommentSchema = {
   mailers: Joi.array().optional().label('Mailers')
 };
 
+const CreateUpdateDeleteConnectionsSchema = {
+  items: Joi.array().required().label('items'),
+  backlogs: Joi.array().required().label('backlogs'),
+  initiatives: Joi.array().required().label('initiatives'),
+  delete: Joi.boolean().required().label('delete')
+};
+
 module.exports = {
   validate: validate,
   LoginSchema,
@@ -178,5 +185,6 @@ module.exports = {
   ItemSelectSchema,
   InitiativesSelectSchema,
   UpdateInitiativesSchema,
-  CreateInitiativesSchema
+  CreateInitiativesSchema,
+  CreateUpdateDeleteConnectionsSchema
 };
