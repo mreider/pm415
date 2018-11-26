@@ -13,11 +13,21 @@ router.get('/:ownerTable/:id', [middlewares.LoginRequired], async (req, res) => 
   const ownerTable = req.params.ownerTable;
 
   const votes = await Votes.where({ owner_table: ownerTable, owner_id: id, user_id: req.user.id }).fetch();
-  let voted = false;
-  if (votes) voted = true;
+
+  let myVote = 0;
+  if (!Utils.serialize(votes)) {
+    myVote = 0;
+  } else {
+    if (Utils.serialize(votes).vote === -1) {
+      myVote = false;
+    } else if (Utils.serialize(votes).vote === 1) {
+      myVote = true;
+    }
+  };
+
   const sum = await getVotes(ownerTable, id);
 
-  return res.json({ success: true, voted, votes: sum });
+  return res.json({ success: true, votes: sum, myVote });
 });
 
 // new vote

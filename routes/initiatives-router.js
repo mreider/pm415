@@ -9,6 +9,7 @@ const Initiative = require('../models/initiative');
 const middlewares = require('../middlewares');
 const knex = require('../db').knex;
 const Utils = require('../utils');
+const _ = require('lodash');
 
 const { validate, InitiativesSelectSchema, UpdateInitiativesSchema, CreateInitiativesSchema } = require('../validation');
 
@@ -20,6 +21,24 @@ router.get('/:orgId', middlewares.LoginRequired, async function(req, res) {
     .leftJoin('users as u', 'b.created_by', 'u.id')
     .where({ organization_id: orgId });
   rows = Utils.serialize(rows);
+
+  // take popularity
+  let initiativesArrai = [];
+  rows.forEach(element => {
+    initiativesArrai.push(element.id);
+  });
+  let votes = await knex('votes as i').sum('vote as sum').select('owner_id').groupBy('owner_id')
+    .where({ owner_table: 'initiatives' })
+    .where('owner_id', 'in', initiativesArrai);
+  votes = Utils.serialize(votes);
+  rows.forEach(element => {
+    element.popularity = 0;
+    let voteSum = _.filter(votes, function(vote) {
+      return vote.owner_id === element.id;
+    });
+    if (voteSum.length !== 0) element.popularity = voteSum[0].sum;
+  });
+  // take popularity
 
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 

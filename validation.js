@@ -99,7 +99,8 @@ const UpdateInitiativesSchema = {
   description: Joi.string().optional().label('Description'),
   popularity: Joi.string().optional().label('Popularity'),
   horizon: Joi.string().optional().label('Horizon'),
-  statusId: Joi.string().optional().label('Status is')
+  statusId: Joi.string().optional().label('Status is'),
+  mailers: Joi.string().optional().label('Mailers')
 };
 
 const CreateInitiativesSchema = {
@@ -107,7 +108,8 @@ const CreateInitiativesSchema = {
   description: Joi.string().optional().label('Description'),
   statusId: Joi.string().optional().label('Status id'),
   popularity: Joi.string().optional().label('Popularity'),
-  horizon: Joi.string().optional().label('Horizon')
+  horizon: Joi.string().optional().label('Horizon'),
+  mailers: Joi.string().optional().label('Mailers')
 };
 
 const CreateBacklogSchema = {

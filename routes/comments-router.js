@@ -117,7 +117,7 @@ function sendMail(value) {
   var mail = {
     from: Config.mailerConfig.from,
     to: value.email,
-    subject: 'item update',
+    subject: value.subject,
     template: 'comment',
     context: {
       href: value.href
@@ -127,14 +127,25 @@ function sendMail(value) {
 };
 
 async function sendNotice(ncomment) {
+  let url = '';
+  let subject = '';
+  if (ncomment.ownerTable === 'items') {
+    url = Config.siteUrl + 'items/item/?orgId=' + ncomment.organizationId + '&itemId=' + ncomment.ownerId;
+    subject = 'item updated';
+  } else if (ncomment.ownerTable === 'initiatives') {
+    url = Config.siteUrl + 'initiative/?orgId=' + ncomment.organizationId + '&initiativeid=' + ncomment.ownerId;
+    subject = 'initiative updated';
+  };
+
   const mailersWhoNeedSendMail = await Item.getAllBacklogMailers(ncomment.ownerId, ncomment.ownerTable);
 
   if (!ncomment.organizationId) ncomment.organizationId = ncomment.organization_id;
 
   mailersWhoNeedSendMail.forEach(el => {
     let value = {};
-    value.href = Config.siteUrl + 'items/item/?orgId=' + ncomment.organizationId + '&itemId=' + ncomment.ownerId;
+    value.href = url;
     value.email = el;
+    value.subject = subject;
     sendMail(value);
   });
 }

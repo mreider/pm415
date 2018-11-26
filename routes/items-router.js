@@ -14,6 +14,24 @@ const Utils = require('../utils');
 
 const { validate, CreateItemSchema, ItemSelectSchema, UpdateItemSchema } = require('../validation');
 
+// list all items
+router.get('/all/:ownerTable/:orgId', middlewares.LoginRequired, async function(req, res) {
+  const ownerTable = req.params.ownerTable;
+  const orgId = parseInt(req.params.orgId);
+  const columns = Item.fieldsToShow(false, 'i.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName']).columns;
+
+  let rows = await knex('items as i').select(columns)
+    .leftJoin('users as u', 'i.created_by', 'u.id')
+    .where({ owner_table: ownerTable });
+  rows = Utils.serialize(rows);
+
+  const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
+
+  if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+
+  res.json({ success: true, items: rows, admin: !!isAdmin });
+});
+
 // list of available items for a particular organization and backlog, and whether the user is an admin
 router.get('/:ownerTable/:orgId/:ownerId', middlewares.LoginRequired, async function(req, res) {
   const ownerId = parseInt(req.params.ownerId);
