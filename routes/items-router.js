@@ -18,7 +18,7 @@ const { validate, CreateItemSchema, ItemSelectSchema, UpdateItemSchema } = requi
 router.get('/all/:ownerTable/:orgId', middlewares.LoginRequired, async function(req, res) {
   const ownerTable = req.params.ownerTable;
   const orgId = parseInt(req.params.orgId);
-  const columns = Item.fieldsToShow(false, 'i.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName']).columns;
+  const columns = Item.fieldsToShow(false, 'i.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName', 'i.description']).columns;
 
   let rows = await knex('items as i').select(columns)
     .leftJoin('users as u', 'i.created_by', 'u.id')
