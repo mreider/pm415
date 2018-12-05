@@ -142,7 +142,7 @@ router.post('/register', validate(RegisterSchema), async (req, res) => {
   var mail = {
     from: Config.mailerConfig.from,
     to: user.get('email'),
-    subject: 'Email verification',
+    subject: '[PM415] confirmation required',
     template: 'email-verification',
     context: {
       confirmationUrl

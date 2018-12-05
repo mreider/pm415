@@ -1,4 +1,5 @@
 const path = require('path');
+const domain = 'pm415.com';
 
 const config = {
   isProduction: process.env.NODE_ENV === 'production',
@@ -59,7 +60,7 @@ const config = {
       api_user: process.env.SENDGRID_USERNAME,
       api_key: process.env.SENDGRID_PASSWORD
     },
-    from: 'info@domain.com',
+    from: 'do-not-reply@' + domain,
     confirmationExpiration: 24 * 60 * 60 * 1000,
     rendererConfig: {
       viewPath: path.join(__dirname, 'templates/emails/'),
