@@ -5,6 +5,7 @@ const ModelBase = require('../db').modelBase;
 
 const Config = require('../config');
 const Bookshelf = require('../db').bookshelf;
+const Utils = require('../utils');
 // const UORoles = require('./users_organizations_roles');
 
 const Organization = require('./organization');
@@ -73,11 +74,6 @@ const User = ModelBase.extend({
       });
     });
   },
-
-  // async hasRole(userId, orgId) {
-  //   const hasRole = await UORoles.where({ user_id: userId, organization_id: orgId }).fetch();
-  //   return hasRole;
-  // },
 
   validateToken(token) {
     let decoded = null;
@@ -153,6 +149,12 @@ const User = ModelBase.extend({
   async create(email, password, firstName, lastName) {
     const hash = await this.hashPassword(password);
     return User.forge({ email, password: hash, firstName, lastName }).save();
+  },
+  async userName(userId) {
+    let user = await User.where({ id: userId }).fetch();
+    user = user.toJSON();
+
+    return Utils.username(user);
   }
 });
 

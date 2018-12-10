@@ -4,6 +4,7 @@ const knex = require('../db').knex;
 const Comments = require('../models/comments');
 const UORole = require('../models/users_organizations_roles');
 const Role = require('../models/role');
+const User = require('../models/user');
 const Item = require('../models/items');
 
 const middlewares = require('../middlewares');
@@ -120,7 +121,9 @@ function sendMail(value) {
     subject: value.subject,
     template: 'comment',
     context: {
-      href: value.href
+      href: value.href,
+      comment: value.comment,
+      userName: value.userName
     }
   };
   mailer.sendMail(mail);
@@ -129,23 +132,28 @@ function sendMail(value) {
 async function sendNotice(ncomment) {
   let url = '';
   let subject = '';
+
+  if (!ncomment.organizationId) ncomment.organizationId = ncomment.organization_id;
+  if (!ncomment.createdBy) ncomment.createdBy = ncomment.created_by;
+
+  const userName = await User.userName(ncomment.createdBy);
   if (ncomment.ownerTable === 'items') {
     url = Config.siteUrl + 'items/item/?orgId=' + ncomment.organizationId + '&itemId=' + ncomment.ownerId;
-    subject = 'item updated';
+    subject = '[' + Config.domain + '] ' + '[' + userName + '] ' + 'commented on item';
   } else if (ncomment.ownerTable === 'initiatives') {
     url = Config.siteUrl + 'initiative/?orgId=' + ncomment.organizationId + '&initiativeid=' + ncomment.ownerId;
-    subject = 'initiative updated';
+    subject = '[' + Config.domain + '] ' + '[' + userName + '] ' + 'commented on initiative';
   };
 
   const mailersWhoNeedSendMail = await Item.getAllBacklogMailers(ncomment.ownerId, ncomment.ownerTable);
-
-  if (!ncomment.organizationId) ncomment.organizationId = ncomment.organization_id;
 
   mailersWhoNeedSendMail.forEach(el => {
     let value = {};
     value.href = url;
     value.email = el;
     value.subject = subject;
+    value.userName = userName;
+    value.comment = ncomment.comment;
     sendMail(value);
   });
 }

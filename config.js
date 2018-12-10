@@ -11,6 +11,7 @@ const config = {
   appKey: '097129fcba444e2dbb8c91ab7002604f7c27503fcf4b46c18708f2852cb654dc',
 
   port: process.env.PORT || 3000,
+  domain,
 
   db: {
     databaseUri: process.env.DATABASE_URL,

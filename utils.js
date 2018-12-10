@@ -31,3 +31,13 @@ exports.isPendingUser = function (orgId, req) {
 
   return false;
 };
+
+exports.username = function (user) {
+  if (!user) return '';
+  const { firstName, lastName, email } = user;
+  if (firstName && lastName) return `${firstName} ${lastName}`;
+  else if (firstName) return firstName;
+  else if (lastName) return lastName;
+
+  return email;
+};
