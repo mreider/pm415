@@ -11,7 +11,15 @@ const Comments = ModelBase.extend({
   // Association
 },
 {
-  // Static methods
+  async getComments(organizationId, ownerTable, ownerId) {
+    let comments = [];
+    try {
+      comments = await this.where({ organization_id: organizationId, owner_table: ownerTable, owner_id: ownerId }).fetchAll();
+    } catch (error) {
+      return [];
+    };
+    return comments;
+  }
 }
 
 );

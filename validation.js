@@ -81,6 +81,11 @@ const InitiativesSelectSchema = {
   fullSelect: Joi.boolean().required().label('fullSelect')
 };
 
+const BugsSelectSchema = {
+  bugId: Joi.array().required().label('bugId'),
+  fullSelect: Joi.boolean().required().label('fullSelect')
+};
+
 const UpdateBacklogSchema = {
   assignee: Joi.string().min(1).optional().label('Assignee'),
   organizationId: Joi.string().optional().label('OrganizationId'),
@@ -102,6 +107,14 @@ const UpdateInitiativesSchema = {
   statusId: Joi.string().optional().label('Status is'),
   mailers: Joi.string().optional().label('Mailers')
 };
+const UpdateBugsSchema = {
+  assignee: Joi.string().min(1).optional().label('Assignee'),
+  title: Joi.string().required().label('Title'),
+  description: Joi.string().optional().label('Description'),
+  statusId: Joi.string().optional().label('Status id'),
+  severity: Joi.string().optional().label('Severity'),
+  reportedBy: Joi.date().optional().label('Severity')
+};
 
 const CreateInitiativesSchema = {
   title: Joi.string().required().label('Title'),
@@ -121,6 +134,15 @@ const CreateBacklogSchema = {
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
   plannedOn: Joi.date().optional()
+};
+
+const CreateBugsSchema = {
+  assignee: Joi.string().min(1).optional().label('Assignee'),
+  title: Joi.string().required().label('Title'),
+  description: Joi.string().optional().label('Description'),
+  statusId: Joi.string().optional().label('Status id'),
+  severity: Joi.string().optional().label('Severity'),
+  reportedBy: Joi.string().min(1).optional().label('Reported by')
 };
 
 const ItemSelectSchema = {
@@ -164,6 +186,7 @@ const CreateUpdateDeleteConnectionsSchema = {
   items: Joi.array().required().label('items'),
   backlogs: Joi.array().required().label('backlogs'),
   initiatives: Joi.array().required().label('initiatives'),
+  bugs: Joi.array().required().label('bugs'),
   delete: Joi.boolean().required().label('delete')
 };
 
@@ -188,5 +211,8 @@ module.exports = {
   InitiativesSelectSchema,
   UpdateInitiativesSchema,
   CreateInitiativesSchema,
-  CreateUpdateDeleteConnectionsSchema
+  CreateUpdateDeleteConnectionsSchema,
+  BugsSelectSchema,
+  UpdateBugsSchema,
+  CreateBugsSchema
 };

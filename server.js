@@ -22,6 +22,7 @@ const StatusRouter = require('./routes/statuses-router');
 const CommentsRouter = require('./routes/comments-router');
 const ItemsRouter = require('./routes/items-router');
 const InitiativesRouter = require('./routes/initiatives-router');
+const BugsRouter = require('./routes/bugs-router');
 const ConnectionsRouter = require('./routes/connections-router');
 const VotesRouter = require('./routes/votes-router');
 
@@ -69,6 +70,7 @@ const promiseApp = async () => {
     app.use('/api/initiatives', InitiativesRouter);
     app.use('/api/votes', VotesRouter);
     app.use('/api/connections', ConnectionsRouter);
+    app.use('/api/bugs', BugsRouter);
 
     app.use(ErrorHandler);
 

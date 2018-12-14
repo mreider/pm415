@@ -5,9 +5,10 @@ const middlewares = require('../middlewares');
 
 const Connections = require('../models/connection');
 const Backlog = require('../models/backlog');
+const Bug = require('../models/bugs');
 const Initiative = require('../models/initiative');
 const Item = require('../models/items');
-const validParams = ['backlog', 'initiative', 'item'];
+const validParams = ['backlog', 'initiative', 'item', 'bug'];
 const knex = require('../db').knex;
 const Utils = require('../utils');
 
@@ -36,6 +37,8 @@ router.get('/:owner/:needInfo/:id', [middlewares.LoginRequired], async (req, res
     info = await Initiative.where('id', 'in', ids).fetchAll();
   } else if (needInfo === 'item') {
     info = await Item.where('id', 'in', ids).fetchAll();
+  } else if (needInfo === 'bug') {
+    info = await Bug.where('id', 'in', ids).fetchAll();
   };
 
   return res.json({ success: true, connections, info: Utils.serialize(info) });
@@ -48,6 +51,8 @@ router.post('/:owner/:id', [middlewares.LoginRequired, validate(CreateUpdateDele
   const items = req.body.items;
   const backlogs = req.body.backlogs;
   const initiatives = req.body.initiatives;
+  const bugs = req.body.bugs;
+  // const bugs = req.body.bugs;
   const del = req.body.delete;
 
   // check owner
@@ -57,6 +62,8 @@ router.post('/:owner/:id', [middlewares.LoginRequired, validate(CreateUpdateDele
   } else if (owner === 'backlog') {
     haveOwner = await Backlog.where({ id }).fetch();
   } else if (owner === 'item') {
+    haveOwner = await Item.where({ id }).fetch();
+  } else if (owner === 'bug') {
     haveOwner = await Item.where({ id }).fetch();
   };
   if (!haveOwner) return res.boom.notFound('Not found', { success: false, message: `not found this ${owner}.` });
@@ -80,6 +87,25 @@ router.post('/:owner/:id', [middlewares.LoginRequired, validate(CreateUpdateDele
     });
 
     await knex('connections').where(owner + '_id', '=', id).where(fieldName, 'in', items).del();
+    if (del === false) await knex('connections').insert(dataArr);
+  };
+
+  if (bugs.length > 0) {
+    const fieldName = 'bug_id';
+    let bugsArray = await Bug.where('id', 'in', bugs).fetchAll();
+    bugsArray = (Utils.serialize(bugsArray));
+
+    if (bugsArray.length !== bugs.length) return res.boom.notFound('Not found', { success: false, message: `not found bugs.` });
+
+    let dataArr = [];
+    bugs.forEach(element => {
+      let data = {};
+      data[owner + '_id'] = id;
+      data[fieldName] = element;
+      dataArr.push(data);
+    });
+
+    await knex('connections').where(owner + '_id', '=', id).where(fieldName, 'in', bugs).del();
     if (del === false) await knex('connections').insert(dataArr);
   };
 
