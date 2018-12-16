@@ -23,11 +23,28 @@ router.get('/:orgId/:fullSelect', middlewares.LoginRequired, async function(req,
   let fullSelect = false;
   if (req.params.fullSelect === 'true') fullSelect = true;
 
-  const columns = Bugs.fieldsToShow(fullSelect, 'b.', ['u.email as emailCreatedBy', 'u.first_name as firstNameCreatedBy', 'u.last_name as lastNameCreatedBy']).columns;
+  const columns = Bugs.fieldsToShow(fullSelect, 'b.', [
+    'u.email as emailCreatedBy',
+    'u.first_name as firstNameCreatedBy',
+    'u.last_name as lastNameCreatedBy',
+    'rb.email as emailReportedBy',
+    'rb.first_name as firstNameReportedBy',
+    'rb.last_name as lastNameReportedBy',
+    'a.email as emailAssignee',
+    'a.first_name as firstNameAssignee',
+    'a.last_name as lastNameAssignee']).columns;
   let rows = await knex('bugs as b').select(columns)
     .leftJoin('users as u', 'b.created_by', 'u.id')
+    .leftJoin('users as rb', 'b.reported_by', 'rb.id')
+    .leftJoin('users as a', 'b.assignee', 'a.id')
     .where({ organization_id: orgId });
   rows = Utils.serialize(rows);
+  rows.forEach(element => {
+    element.createdByData = { email: element.emailCreatedBy, firstName: element.firstNameCreatedBy, lastName: element.lastNameCreatedBy };
+    element.reportedByData = { email: element.emailReportedBy, firstName: element.firstNameReportedBy, lastName: element.lastNameReportedBy };
+    element.assigneeData = { email: element.emailAssignee, firstName: element.firstNameAssignee, lastName: element.lastNameAssignee };
+    delete element['emailCreatedBy']; delete element['firstNameCreatedBy']; delete element['lastNameCreatedBy']; delete element['emailReportedBy']; delete element['firstNameReportedBy']; delete element['lastNameReportedBy']; delete element['emailAssignee']; delete element['lastNameAssignee']; delete element['firstNameAssignee'];
+  });
 
   if (fullSelect) {
     for (const element of rows) {
