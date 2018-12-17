@@ -64,7 +64,7 @@ router.post('/:owner/:id', [middlewares.LoginRequired, validate(CreateUpdateDele
   } else if (owner === 'item') {
     haveOwner = await Item.where({ id }).fetch();
   } else if (owner === 'bug') {
-    haveOwner = await Item.where({ id }).fetch();
+    haveOwner = await Bug.where({ id }).fetch();
   };
   if (!haveOwner) return res.boom.notFound('Not found', { success: false, message: `not found this ${owner}.` });
 

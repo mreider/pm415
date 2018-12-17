@@ -113,7 +113,8 @@ const UpdateBugsSchema = {
   description: Joi.string().optional().label('Description'),
   statusId: Joi.string().optional().label('Status id'),
   severity: Joi.string().optional().label('Severity'),
-  reportedBy: Joi.date().optional().label('Severity')
+  reportedBy: Joi.string().min(1).optional().label('ReportedBy'),
+  mailers: Joi.string().optional().label('Mailers')
 };
 
 const CreateInitiativesSchema = {
@@ -142,7 +143,8 @@ const CreateBugsSchema = {
   description: Joi.string().optional().label('Description'),
   statusId: Joi.string().optional().label('Status id'),
   severity: Joi.string().optional().label('Severity'),
-  reportedBy: Joi.string().min(1).optional().label('Reported by')
+  reportedBy: Joi.string().min(1).optional().label('Reported by'),
+  mailers: Joi.string().optional().label('Mailers')
 };
 
 const ItemSelectSchema = {

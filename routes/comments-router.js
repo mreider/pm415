@@ -143,6 +143,9 @@ async function sendNotice(ncomment) {
   } else if (ncomment.ownerTable === 'initiatives') {
     url = Config.siteUrl + 'initiative/?orgId=' + ncomment.organizationId + '&initiativeid=' + ncomment.ownerId;
     subject = '[' + Config.domain + '] ' + '[' + userName + '] ' + 'commented on initiative';
+  } else if (ncomment.ownerTable === 'bugs') {
+    url = Config.siteUrl + 'bug/?orgId=' + ncomment.organizationId + '&bugid=' + ncomment.ownerId;
+    subject = '[' + Config.domain + '] ' + '[' + userName + '] ' + 'commented on bug';
   };
 
   const mailersWhoNeedSendMail = await Item.getAllBacklogMailers(ncomment.ownerId, ncomment.ownerTable);

@@ -18,7 +18,7 @@ const Utils = require('../utils');
 const { validate, BugsSelectSchema, UpdateBugsSchema, CreateBugsSchema } = require('../validation');
 
 // list of available bugs for a particular organization, and whether the user is an admin
-router.get('/:orgId/:fullSelect', middlewares.LoginRequired, async function(req, res) {
+router.get('/full/:orgId/:fullSelect', middlewares.LoginRequired, async function(req, res) {
   const orgId = parseInt(req.params.orgId);
   let fullSelect = false;
   if (req.params.fullSelect === 'true') fullSelect = true;
@@ -74,9 +74,13 @@ router.get('/:orgId/:bugId', middlewares.LoginRequired, async function(req, res)
   if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
   if (Utils.serialize(rows).length === 0) return res.boom.notFound('Not found', { success: false, message: `bug not found.` });
 
-  const author = await User.where({ id: rows[0].createdBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
+  const createdByData = await User.where({ id: rows[0].createdBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
+  const reportedByData = await User.where({ id: rows[0].reportedBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
+  const assigneeData = await User.where({ id: rows[0].assignee }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
 
-  rows[0].author = Utils.serialize(author);
+  rows[0].createdBy = Utils.serialize(createdByData);
+  rows[0].reportedBy = Utils.serialize(reportedByData);
+  rows[0].assignee = Utils.serialize(assigneeData);
   rows = Utils.serialize(rows);
 
   res.json({ success: true, bug: rows[0], admin: !!isAdmin });
@@ -104,6 +108,13 @@ router.put('/edit/:orgId/:bugId', [middlewares.LoginRequired, validate(UpdateBug
   const bug = await Bugs.where({ organization_id: orgId }).where('id', '=', bugId).fetch();
   if (!bug) return res.boom.notFound('Not found', { success: false, message: `Bug with ID ${bugId} not found.` });
 
+  let mailers = '';
+  if (Utils.serialize(bug).createdBy) {
+    const user = await User.where({ id: (Utils.serialize(bug).createdBy) }).fetch();
+    if (user) mailers = mailers + '!' + Utils.serialize(user).email + '!';
+  };
+  data.mailers = mailers;
+
   bug.set(data);
   await bug.save();
 
@@ -118,6 +129,13 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateBugsSchema
   data.createdBy = req.user.id;
 
   if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
+
+  let mailers = '';
+  if (data.createdBy) {
+    const user = await User.where({ id: data.createdBy }).fetch();
+    if (user) mailers = mailers + '!' + Utils.serialize(user).email + '!';
+  };
+  data.mailers = mailers;
 
   const bugs = await Bugs.create(data);
   res.json({ success: true, bugs });
