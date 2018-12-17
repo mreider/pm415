@@ -27,23 +27,18 @@ router.get('/full/:orgId/:fullSelect', middlewares.LoginRequired, async function
     'u.email as emailCreatedBy',
     'u.first_name as firstNameCreatedBy',
     'u.last_name as lastNameCreatedBy',
-    'rb.email as emailReportedBy',
-    'rb.first_name as firstNameReportedBy',
-    'rb.last_name as lastNameReportedBy',
     'a.email as emailAssignee',
     'a.first_name as firstNameAssignee',
     'a.last_name as lastNameAssignee']).columns;
   let rows = await knex('bugs as b').select(columns)
     .leftJoin('users as u', 'b.created_by', 'u.id')
-    .leftJoin('users as rb', 'b.reported_by', 'rb.id')
     .leftJoin('users as a', 'b.assignee', 'a.id')
     .where({ organization_id: orgId });
   rows = Utils.serialize(rows);
   rows.forEach(element => {
-    element.createdByData = { email: element.emailCreatedBy, firstName: element.firstNameCreatedBy, lastName: element.lastNameCreatedBy };
-    element.reportedByData = { email: element.emailReportedBy, firstName: element.firstNameReportedBy, lastName: element.lastNameReportedBy };
+    element.reportedByData = { email: element.emailCreatedBy, firstName: element.firstNameCreatedBy, lastName: element.lastNameCreatedBy };
     element.assigneeData = { email: element.emailAssignee, firstName: element.firstNameAssignee, lastName: element.lastNameAssignee };
-    delete element['emailCreatedBy']; delete element['firstNameCreatedBy']; delete element['lastNameCreatedBy']; delete element['emailReportedBy']; delete element['firstNameReportedBy']; delete element['lastNameReportedBy']; delete element['emailAssignee']; delete element['lastNameAssignee']; delete element['firstNameAssignee'];
+    delete element['emailCreatedBy']; delete element['firstNameCreatedBy']; delete element['lastNameCreatedBy']; delete element['emailAssignee']; delete element['lastNameAssignee']; delete element['firstNameAssignee'];
   });
 
   if (fullSelect) {
@@ -74,11 +69,9 @@ router.get('/:orgId/:bugId', middlewares.LoginRequired, async function(req, res)
   if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
   if (Utils.serialize(rows).length === 0) return res.boom.notFound('Not found', { success: false, message: `bug not found.` });
 
-  const createdByData = await User.where({ id: rows[0].createdBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
-  const reportedByData = await User.where({ id: rows[0].reportedBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
+  const reportedByData = await User.where({ id: rows[0].createdBy }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
   const assigneeData = await User.where({ id: rows[0].assignee }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
 
-  rows[0].createdBy = Utils.serialize(createdByData);
   rows[0].reportedBy = Utils.serialize(reportedByData);
   rows[0].assignee = Utils.serialize(assigneeData);
   rows = Utils.serialize(rows);
@@ -126,7 +119,7 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateBugsSchema
   const orgId = parseInt(req.params.orgId);
   let data = req.body;
   data.organizationId = orgId;
-  data.createdBy = req.user.id;
+  // data.createdBy = req.user.id;
 
   if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
 

@@ -113,7 +113,7 @@ const UpdateBugsSchema = {
   description: Joi.string().optional().label('Description'),
   statusId: Joi.string().optional().label('Status id'),
   severity: Joi.string().optional().label('Severity'),
-  reportedBy: Joi.string().min(1).optional().label('ReportedBy'),
+  createdBy: Joi.string().min(1).optional().label('Created By'),
   mailers: Joi.string().optional().label('Mailers')
 };
 
@@ -143,7 +143,7 @@ const CreateBugsSchema = {
   description: Joi.string().optional().label('Description'),
   statusId: Joi.string().optional().label('Status id'),
   severity: Joi.string().optional().label('Severity'),
-  reportedBy: Joi.string().min(1).optional().label('Reported by'),
+  createdBy: Joi.string().min(1).optional().label('Created by'),
   mailers: Joi.string().optional().label('Mailers')
 };
 
