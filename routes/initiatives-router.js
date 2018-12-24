@@ -107,6 +107,7 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateInitiative
 
   const initiative = await Initiative.create(data);
   res.json({ success: true, initiative });
+  await Utils.addDataToIndex(initiative, 'initiatives', 'put');
 });
 
 // delete initiative

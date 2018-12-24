@@ -23,6 +23,8 @@ const config = {
     }
   },
 
+  elasticsearch: 'http://localhost:9200',
+
   cors: {
     credentials: true,
     origin: function(origin, callback) {
