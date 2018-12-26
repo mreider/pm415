@@ -3,7 +3,7 @@ const Role = require('./models/role');
 const Axios = require('axios');
 const config = require('./config');
 const User = require('./models/user');
-const Utils = require('./Utils');
+const Utils = require('./utils');
 const knex = require('./db').knex;
 
 module.exports = exports = {};
