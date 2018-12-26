@@ -9,6 +9,7 @@ const Initiative = require('../models/initiative');
 const middlewares = require('../middlewares');
 const knex = require('../db').knex;
 const Utils = require('../utils');
+const UtilsAsync = require('../utilsAsync');
 const _ = require('lodash');
 
 const { validate, InitiativesSelectSchema, UpdateInitiativesSchema, CreateInitiativesSchema } = require('../validation');
@@ -94,6 +95,7 @@ router.put('/edit/:orgId/:initiativeId', [middlewares.LoginRequired, validate(Up
   await initiative.save();
 
   res.json({ success: true, initiative });
+  await UtilsAsync.addDataToIndex(initiative, 'initiatives', 'put');
 });
 
 // new Initiatives POST
@@ -107,7 +109,7 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateInitiative
 
   const initiative = await Initiative.create(data);
   res.json({ success: true, initiative });
-  await Utils.addDataToIndex(initiative, 'initiatives', 'put');
+  await UtilsAsync.addDataToIndex(initiative, 'initiatives', 'put');
 });
 
 // delete initiative
@@ -124,6 +126,7 @@ router.delete('/:orgId/:initiativeId', [middlewares.LoginRequired], async functi
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'initiative not found' });
   };
+  await UtilsAsync.addDataToIndex(initiative, 'initiatives', 'delete');
   await initiative.destroy();
 
   res.json({ success: true, initiative: initiativeId, message: 'initiative deleted' });

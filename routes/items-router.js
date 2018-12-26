@@ -11,6 +11,7 @@ const middlewares = require('../middlewares');
 // const _ = require('lodash');
 const knex = require('../db').knex;
 const Utils = require('../utils');
+const UtilsAsync = require('../utilsAsync');
 
 const { validate, CreateItemSchema, ItemSelectSchema, UpdateItemSchema } = require('../validation');
 
@@ -125,6 +126,7 @@ router.put('/edit/:orgId/:itemId', [middlewares.LoginRequired, validate(UpdateIt
   await item.save();
 
   res.json({ success: true, item });
+  await UtilsAsync.addDataToIndex(item, 'items', 'put');
 });
 
 // new item
@@ -159,6 +161,7 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateItemSchema
 
   const item = await Item.create(data);
   res.json({ success: true, item }); // item
+  await UtilsAsync.addDataToIndex(item, 'items', 'put');
 });
 
 // delete item
@@ -175,6 +178,7 @@ router.delete('/:orgId/:itemId', [middlewares.LoginRequired], async function(req
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'backlog not found' });
   };
+  await UtilsAsync.addDataToIndex(item, 'items', 'delete');
   await item.destroy();
 
   res.json({ success: true, backlog: itemId, message: 'Item deleted' });

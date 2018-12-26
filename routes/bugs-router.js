@@ -12,6 +12,7 @@ const Bugs = require('../models/bugs');
 const middlewares = require('../middlewares');
 const knex = require('../db').knex;
 const Utils = require('../utils');
+const UtilsAsync = require('../utilsAsync');
 // const _ = require('lodash');
 
 // const { validate, InitiativesSelectSchema, UpdateInitiativesSchema, CreateInitiativesSchema } = require('../validation');
@@ -112,7 +113,7 @@ router.put('/edit/:orgId/:bugId', [middlewares.LoginRequired, validate(UpdateBug
   await bug.save();
 
   res.json({ success: true, bug });
-  await Utils.addDataToIndex(bug, 'bugs', 'put');
+  await UtilsAsync.addDataToIndex(bug, 'bugs', 'put');
 });
 
 // new bug POST
@@ -133,7 +134,7 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateBugsSchema
 
   const bugs = await Bugs.create(data);
   res.json({ success: true, bugs });
-  await Utils.addDataToIndex(bugs, 'bugs', 'put');
+  await UtilsAsync.addDataToIndex(bugs, 'bugs', 'put');
 });
 
 // delete bug
@@ -150,7 +151,7 @@ router.delete('/:orgId/:bugId', [middlewares.LoginRequired], async function(req,
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'bug not found' });
   };
-  await Utils.addDataToIndex(bug, 'bugs', 'delete');
+  await UtilsAsync.addDataToIndex(bug, 'bugs', 'delete');
   await bug.destroy();
 
   res.json({ success: true, bug: bugId, message: 'bug deleted' });

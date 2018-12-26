@@ -9,6 +9,7 @@ const Statuses = require('../models/statuses');
 const middlewares = require('../middlewares');
 const knex = require('../db').knex;
 const Utils = require('../utils');
+const UtilsAsync = require('../utilsAsync');
 
 const { validate, CreateBacklogSchema, BackLogsSelectSchema, UpdateBacklogSchema } = require('../validation');
 
@@ -91,6 +92,7 @@ router.put('/edit/:orgId/:backlogId', [middlewares.LoginRequired, validate(Updat
   await backlog.save();
 
   res.json({ success: true, backlog });
+  await UtilsAsync.addDataToIndex(backlog, 'backlogs', 'put');
 });
 
 // new backlog POST
@@ -117,6 +119,7 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateBacklogSch
 
   const backlog = await Backlog.create(data);
   res.json({ success: true, backlog });
+  await UtilsAsync.addDataToIndex(backlog, 'backlogs', 'put');
 });
 
 // delete backlogs
@@ -133,6 +136,7 @@ router.delete('/:orgId/:backlogId', [middlewares.LoginRequired], async function(
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'backlog not found' });
   };
+  await UtilsAsync.addDataToIndex(backlog, 'backlogs', 'delete');
   await backlog.destroy();
 
   res.json({ success: true, backlog: backlogId, message: 'Backlog deleted' });

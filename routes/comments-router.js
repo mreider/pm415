@@ -4,11 +4,11 @@ const knex = require('../db').knex;
 const Comments = require('../models/comments');
 const UORole = require('../models/users_organizations_roles');
 const Role = require('../models/role');
-const User = require('../models/user');
 const Item = require('../models/items');
 
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
+const UtilsAsync = require('../utilsAsync');
 const { validate, CreateUpdateCommentSchema } = require('../validation');
 
 const Nodemailer = require('nodemailer');
@@ -56,6 +56,7 @@ router.post('/new/:ownerTable/:orgId/:ownerId', [middlewares.LoginRequired, vali
   sendNotice(Utils.serialize(comment));
 
   res.json({ success: true, comment });
+  await UtilsAsync.addDataToIndex(comment, 'comments', 'put');
 });
 
 // get comments
@@ -91,6 +92,8 @@ router.put('/edit/:id', [middlewares.LoginRequired, validate(CreateUpdateComment
   comment.set(data);
   await comment.save();
 
+  await UtilsAsync.addDataToIndex(comment, 'comments', 'put');
+
   sendNotice(Utils.serialize(comment));
 
   res.json({ success: true, comment });
@@ -109,6 +112,7 @@ router.delete('/delete/:orgId/:id', [middlewares.LoginRequired], async function(
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'backlog not found' });
   };
+  await UtilsAsync.addDataToIndex(comment, 'comments', 'delete');
   await comment.destroy();
 
   res.json({ success: true, comment: id, message: 'Comment deleted' });
@@ -136,7 +140,8 @@ async function sendNotice(ncomment) {
   if (!ncomment.organizationId) ncomment.organizationId = ncomment.organization_id;
   if (!ncomment.createdBy) ncomment.createdBy = ncomment.created_by;
 
-  const userName = await User.userName(ncomment.createdBy);
+  const userName = await UtilsAsync.userName(ncomment.createdBy);
+
   if (ncomment.ownerTable === 'items') {
     url = Config.siteUrl + 'items/item/?orgId=' + ncomment.organizationId + '&itemId=' + ncomment.ownerId;
     subject = '[' + Config.domain + '] ' + '[' + userName + '] ' + 'commented on item';
