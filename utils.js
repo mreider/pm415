@@ -14,6 +14,7 @@ exports.serialize = function(obj) {
     'confirmedAt',
     'createdAt',
     'updatedAt',
+    'apiKey',
     '_pivot_user_id',
     '_pivot_organization_id',
     '_pivot_role_id'

@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const Role = require('./models/role');
 const Axios = require('axios');
 const config = require('./config');
 const User = require('./models/user');
@@ -85,6 +84,10 @@ exports.serializeToIndexComment = async function(obj) {
     ownerId: ''
   };
 
+  if (!obj.hasOwnProperty('ownerId') && obj.hasOwnProperty('owner_id')) {
+    obj.ownerId = obj.owner_id;
+  };
+
   if (obj.hasOwnProperty('ownerId')) {
     let rows = await knex(obj.ownerTable + ' as i').select('title', 'id').where({ id: obj.ownerId });
     rows = Utils.serialize(rows);
@@ -119,16 +122,6 @@ exports.serializeToIndexComment = async function(obj) {
   return newObj;
 };
 
-exports.isPendingUser = function (orgId, req) {
-  const organization = _.find(req.user.organizations, org => { return org.id === orgId; });
-  if (!organization) return true;
-
-  const RolePending = _.find(organization.roles, role => { return role.id === Role.PendingRoleId; });
-  if (RolePending) return true;
-
-  return false;
-};
-
 exports.addDataToIndex = async function (data, indexName, method) {
   let dataToElastic;
   if (indexName === 'comments') {
@@ -156,18 +149,18 @@ exports.search = async function (where, request, orgId) {
   let must = [];
   must.push({ multi_match: {
     query: request,
-    fields: ['title', 'description', 'comment'],
+    fields: ['title', 'description', 'comment', 'author.firstName', 'author.lastName', 'author.email', 'assignee.firstName', 'assignee.lastName', 'assignee.email'],
     type: 'phrase_prefix' }
   });
   must.push({ match: { organization: orgId } });
   searchJson.query.bool = { must: must };
   let response = {};
   try {
-    response = await Axios.post(config.elasticsearch + '/_all/' + '_search', searchJson);
+    response = await Axios.post(config.elasticsearch + '/_all/' + '_search/?size=10000', searchJson);
   } catch (error) {
     return response;
   };
   response = _.get(response, 'data.hits');
-
+  response.query = searchJson;
   return response;
 };
