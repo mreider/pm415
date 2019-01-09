@@ -14,12 +14,17 @@ const UtilsAsync = require('../utilsAsync');
 const { validate, CreateBacklogSchema, BackLogsSelectSchema, UpdateBacklogSchema } = require('../validation');
 
 // list of available backlogs for a particular organization, and whether the user is an admin
-router.get('/:orgId', middlewares.LoginRequired, async function(req, res) {
+router.get('/:showArchived/:orgId', middlewares.LoginRequired, async function(req, res) {
   const orgId = parseInt(req.params.orgId);
+  const showArchived = req.params.showArchived;
+
+  let where = { organization_id: orgId };
+  if (showArchived === 'false') where.archived = 0;
+
   const columns = Backlog.fieldsToShow(false, 'b.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName']).columns;
   let rows = await knex('backlogs as b').select(columns)
     .leftJoin('users as u', 'b.created_by', 'u.id')
-    .where({ organization_id: orgId });
+    .where(where);
   rows = Utils.serialize(rows);
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
@@ -29,7 +34,7 @@ router.get('/:orgId', middlewares.LoginRequired, async function(req, res) {
 });
 
 // one backlog info
-router.get('/:orgId/:backlogId', middlewares.LoginRequired, async function(req, res) {
+router.get('/one/:orgId/:backlogId', middlewares.LoginRequired, async function(req, res) {
   const orgId = parseInt(req.params.orgId);
   const backlogId = parseInt(req.params.backlogId);
   const columns = Backlog.fieldsToShow(true, 'b.').columns;

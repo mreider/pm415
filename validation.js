@@ -95,7 +95,8 @@ const UpdateBacklogSchema = {
   points: Joi.string().optional().label('Points'),
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
-  plannedOn: Joi.date().optional()
+  plannedOn: Joi.date().optional(),
+  archived: Joi.boolean().optional().label('Archived')
 };
 
 const UpdateInitiativesSchema = {

@@ -26,9 +26,9 @@ const Backlogs = ModelBase.extend({
     let columns;
 
     if (fullSelect) {
-      columns = ['created_at as createdAt', 'points', 'assignee', 'id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy', 'forecasted_release as forecastedRelease', 'actual_release as actualRelease', 'planned_on as plannedOn'];
+      columns = ['created_at as createdAt', 'points', 'assignee', 'archived', 'id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy', 'forecasted_release as forecastedRelease', 'actual_release as actualRelease', 'planned_on as plannedOn'];
     } else {
-      columns = ['id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy'];
+      columns = ['id', 'title', 'description', 'archived', 'status_id as statusId', 'created_by as createdBy'];
     };
 
     if (prefix) {

@@ -7,6 +7,6 @@ exports.up = async function(knex) {
 exports.down = function(knex, Promise) {
   return knex.raw(`
      ALTER TABLE bugs
-    DROP COLUMN mailers,;
+    DROP COLUMN mailers;
   `);
 };
