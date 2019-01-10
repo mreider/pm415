@@ -20,12 +20,22 @@ exports.serializeToIndex = async function(obj, type) {
     organization: '',
     id: '',
     createdOn: '',
-    ownerId: ''
+    ownerId: '',
+    archived: 0
   };
 
   if (obj.hasOwnProperty('title')) {
     newObj.title = obj.title;
   };
+  if (obj.hasOwnProperty('archived')) {
+    if (obj.archived === true) {
+      obj.archived = 1;
+    } else {
+      obj.archived = 0;
+    };
+    newObj.archived = obj.archived;
+  };
+
   if (obj.hasOwnProperty('description')) {
     newObj.description = obj.description;
   };
@@ -81,7 +91,8 @@ exports.serializeToIndexComment = async function(obj) {
     id: '',
     createdOn: '',
     ownerTable: '',
-    ownerId: ''
+    ownerId: '',
+    archived: 0
   };
 
   if (!obj.hasOwnProperty('ownerId') && obj.hasOwnProperty('owner_id')) {
@@ -89,7 +100,7 @@ exports.serializeToIndexComment = async function(obj) {
   };
 
   if (obj.hasOwnProperty('ownerId')) {
-    let rows = await knex(obj.ownerTable + ' as i').select('title', 'id').where({ id: obj.ownerId });
+    let rows = await knex(obj.ownerTable + ' as i').select('title', 'id', 'archived').where({ id: obj.ownerId });
     rows = Utils.serialize(rows);
     let owner = rows[0];
     if (owner) {
@@ -98,6 +109,12 @@ exports.serializeToIndexComment = async function(obj) {
       newObj.id = owner.id;
       newObj.ownerId = obj.ownerId;
       newObj.ownerTable = obj.ownerTable;
+      if (owner.archived === true) {
+        owner.archived = 1;
+      } else {
+        owner.archived = 0;
+      };
+      newObj.archived = owner.archived;
     };
   };
   if (obj.hasOwnProperty('createdBy') && !obj.hasOwnProperty('created_by')) {
@@ -152,7 +169,9 @@ exports.search = async function (where, request, orgId) {
     fields: ['title', 'description', 'comment', 'author.firstName', 'author.lastName', 'author.email', 'assignee.firstName', 'assignee.lastName', 'assignee.email'],
     type: 'phrase_prefix' }
   });
-  must.push({ match: { organization: orgId } });
+  let ownerMatch = {};
+  ownerMatch.match = where;
+  must.push(ownerMatch);
   searchJson.query.bool = { must: must };
   let response = {};
   try {

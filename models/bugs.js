@@ -15,9 +15,9 @@ const Bugs = ModelBase.extend({
     let columns;
 
     if (fullSelect) {
-      columns = ['created_at as createdAt', 'assignee', 'id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy', 'reported_by as reportedBy', 'severity'];
+      columns = ['created_at as createdAt', 'assignee', 'archived', 'id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy', 'reported_by as reportedBy', 'severity'];
     } else {
-      columns = ['id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy', 'created_at as createdAt', 'severity', 'assignee'];
+      columns = ['id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy', 'created_at as createdAt', 'severity', 'assignee', 'archived'];
     };
 
     if (prefix) {

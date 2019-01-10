@@ -19,10 +19,13 @@ const UtilsAsync = require('../utilsAsync');
 const { validate, BugsSelectSchema, UpdateBugsSchema, CreateBugsSchema } = require('../validation');
 
 // list of available bugs for a particular organization, and whether the user is an admin
-router.get('/full/:orgId/:fullSelect', middlewares.LoginRequired, async function(req, res) {
+router.get('/full/:showArchived/:orgId/:fullSelect', middlewares.LoginRequired, async function(req, res) {
   const orgId = parseInt(req.params.orgId);
   let fullSelect = false;
   if (req.params.fullSelect === 'true') fullSelect = true;
+  const showArchived = req.params.showArchived;
+  let where = { organization_id: orgId };
+  if (showArchived === 'false') where.archived = 0;
 
   const columns = Bugs.fieldsToShow(fullSelect, 'b.', [
     'u.email as emailCreatedBy',
@@ -34,7 +37,7 @@ router.get('/full/:orgId/:fullSelect', middlewares.LoginRequired, async function
   let rows = await knex('bugs as b').select(columns)
     .leftJoin('users as u', 'b.created_by', 'u.id')
     .leftJoin('users as a', 'b.assignee', 'a.id')
-    .where({ organization_id: orgId });
+    .where(where);
   rows = Utils.serialize(rows);
   rows.forEach(element => {
     element.reportedByData = { email: element.emailCreatedBy, firstName: element.firstNameCreatedBy, lastName: element.lastNameCreatedBy };

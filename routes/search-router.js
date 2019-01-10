@@ -12,15 +12,23 @@ const Axios = require('axios');
 const config = require('../config');
 
 // start search
-router.get('/:text/:orgId', [middlewares.LoginRequired], async (req, res) => {
-  const where = req.params.where;
+router.get('/:text/:orgId/:showArchived', [middlewares.LoginRequired], async (req, res) => {
   const text = req.params.text;
   const orgId = req.params.orgId;
+  const showArchived = req.params.showArchived;
+  let where = { organization: orgId };
+
   const responce = await UtilsAsync.search(where, text, orgId);
   let data = [];
   if (responce.hits) {
     responce.hits.forEach(element => {
-      data.push(element._source);
+      if (showArchived === 'false') {
+        if (element._source.archived === 0) {
+          data.push(element._source);
+        };
+      } else if (showArchived === 'true') {
+        data.push(element._source);
+      };
     });
   }
   return res.json({ success: true, data: data, query: responce.query });

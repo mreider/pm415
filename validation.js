@@ -106,7 +106,8 @@ const UpdateInitiativesSchema = {
   popularity: Joi.string().optional().label('Popularity'),
   horizon: Joi.string().optional().label('Horizon'),
   statusId: Joi.string().optional().label('Status is'),
-  mailers: Joi.string().optional().label('Mailers')
+  mailers: Joi.string().optional().label('Mailers'),
+  archived: Joi.boolean().optional().label('Archived')
 };
 const UpdateBugsSchema = {
   assignee: Joi.string().min(1).optional().label('Assignee'),
@@ -115,7 +116,8 @@ const UpdateBugsSchema = {
   statusId: Joi.string().optional().label('Status id'),
   severity: Joi.string().optional().label('Severity'),
   createdBy: Joi.string().min(1).optional().label('Created By'),
-  mailers: Joi.string().optional().label('Mailers')
+  mailers: Joi.string().optional().label('Mailers'),
+  archived: Joi.boolean().optional().label('Archived')
 };
 
 const CreateInitiativesSchema = {
@@ -163,7 +165,8 @@ const UpdateItemSchema = {
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
   plannedOn: Joi.date().optional(),
-  mailers: Joi.string().optional().label('Mailers')
+  mailers: Joi.string().optional().label('Mailers'),
+  archived: Joi.boolean().optional().label('Archived')
 };
 
 const CreateItemSchema = {

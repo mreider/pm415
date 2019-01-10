@@ -34,14 +34,18 @@ router.get('/all/:ownerTable/:orgId', middlewares.LoginRequired, async function(
 });
 
 // list of available items for a particular organization and backlog, and whether the user is an admin
-router.get('/:ownerTable/:orgId/:ownerId', middlewares.LoginRequired, async function(req, res) {
+router.get('/:showArchived/:ownerTable/:orgId/:ownerId', middlewares.LoginRequired, async function(req, res) {
   const ownerId = parseInt(req.params.ownerId);
   const ownerTable = req.params.ownerTable;
   const orgId = parseInt(req.params.orgId);
+  const showArchived = req.params.showArchived;
+  let where = { owner_table: ownerTable, owner_id: ownerId };
+  if (showArchived === 'false') where.archived = 0;
+
   const columns = Item.fieldsToShow(false, 'i.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName']).columns;
   let rows = await knex('items as i').select(columns)
     .leftJoin('users as u', 'i.created_by', 'u.id')
-    .where({ owner_table: ownerTable, owner_id: ownerId })
+    .where(where)
     .where({ owner_id: ownerId });
   rows = Utils.serialize(rows);
 
