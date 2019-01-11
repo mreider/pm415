@@ -69,6 +69,7 @@ router.post('/:owner/:id', [middlewares.LoginRequired, validate(CreateUpdateDele
   if (!haveOwner) return res.boom.notFound('Not found', { success: false, message: `not found this ${owner}.` });
 
   // check params
+  if (bugs.length === 0 && items.length === 0 && backlogs.length === 0 && initiatives.length === 0) await knex('connections').where(owner + '_id', '=', id).del();
 
   // let haveParams = false;
   if (items.length > 0) {
@@ -149,6 +150,5 @@ router.post('/:owner/:id', [middlewares.LoginRequired, validate(CreateUpdateDele
 
   return res.json({ success: true });
 });
-//
 
 module.exports = router;

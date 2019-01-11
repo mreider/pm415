@@ -16,14 +16,17 @@ const UtilsAsync = require('../utilsAsync');
 const { validate, CreateItemSchema, ItemSelectSchema, UpdateItemSchema } = require('../validation');
 
 // list all items
-router.get('/all/:ownerTable/:orgId', middlewares.LoginRequired, async function(req, res) {
+router.get('/all/:showArchived/:ownerTable/:orgId', middlewares.LoginRequired, async function(req, res) {
   const ownerTable = req.params.ownerTable;
   const orgId = parseInt(req.params.orgId);
+  const showArchived = req.params.showArchived;
+  let where = { owner_table: ownerTable };
+  if (showArchived === 'false') where.archived = 0;
   const columns = Item.fieldsToShow(false, 'i.', ['u.email', 'u.first_name as firstName', 'u.last_name as lastName', 'i.description']).columns;
 
   let rows = await knex('items as i').select(columns)
     .leftJoin('users as u', 'i.created_by', 'u.id')
-    .where({ owner_table: ownerTable });
+    .where(where);
   rows = Utils.serialize(rows);
 
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
