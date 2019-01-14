@@ -26,6 +26,7 @@ const BugsRouter = require('./routes/bugs-router');
 const ConnectionsRouter = require('./routes/connections-router');
 const VotesRouter = require('./routes/votes-router');
 const SearchRouter = require('./routes/search-router');
+const RssRouter = require('./routes/rss-router');
 
 const UserTokenMiddleware = require('./middlewares').UserTokenMiddleware;
 // const db = require('./db');
@@ -73,6 +74,7 @@ const promiseApp = async () => {
     app.use('/api/connections', ConnectionsRouter);
     app.use('/api/bugs', BugsRouter);
     app.use('/api/search', SearchRouter);
+    app.use('/api/rss', RssRouter);
 
     app.use(ErrorHandler);
 

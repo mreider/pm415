@@ -12,6 +12,8 @@ const config = {
 
   port: process.env.PORT || 3000,
   domain,
+  feedList: ['http://www.mindtheproduct.com/feed/', 'https://www.reddit.com/r/prodmgmt/.rss?format=xml'],
+  // feedList: [],
 
   db: {
     databaseUri: process.env.DATABASE_URL,
