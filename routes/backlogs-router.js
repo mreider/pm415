@@ -10,6 +10,7 @@ const middlewares = require('../middlewares');
 const knex = require('../db').knex;
 const Utils = require('../utils');
 const UtilsAsync = require('../utilsAsync');
+const Item = require('../models/items');
 
 const { validate, CreateBacklogSchema, BackLogsSelectSchema, UpdateBacklogSchema } = require('../validation');
 
@@ -142,6 +143,23 @@ router.delete('/:orgId/:backlogId', [middlewares.LoginRequired], async function(
     return res.boom.forbidden('Forbidden', { success: false, message: 'backlog not found' });
   };
   await UtilsAsync.addDataToIndex(backlog, 'backlogs', 'delete');
+  // delete all dependent data
+  let columns = Item.fieldsToShow(true, '', ['organization_id as organizationId']).columns;
+  let rows = await knex('items').select(columns).where({ owner_id: backlogId });
+  rows = Utils.serialize(rows);
+  for (const element of rows) {
+    let columnComment = ['id', 'owner_id as ownerId', 'owner_table as ownerTable', 'comment', 'created_by as createdBy', 'created_at as createdAt', 'organization_id as organizationId'];
+    let rowsComment = await knex('comments as b').select(columnComment).where({ owner_id: element.id });
+    rowsComment = Utils.serialize(rowsComment);
+    for (const elementC of rowsComment) {
+      await UtilsAsync.addDataToIndex(elementC, 'comments', 'delete');
+    };
+    await UtilsAsync.addDataToIndex(element, 'items', 'delete');
+    await knex('comments').del().where({ owner_id: element.id, owner_table: 'items' });
+    await knex('connections').del().where({ item_id: element.id });
+  };
+  await knex('items').del().where({ owner_id: backlogId });
+  // delete all dependent data
   await backlog.destroy();
 
   res.json({ success: true, backlog: backlogId, message: 'Backlog deleted' });

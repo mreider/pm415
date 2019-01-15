@@ -117,6 +117,25 @@ router.delete('/delete/:orgId/:id', [middlewares.LoginRequired], async function(
 
   res.json({ success: true, comment: id, message: 'Comment deleted' });
 });
+// delete comment
+router.delete('/deleteAll/:ownerTable/:ownerId', [middlewares.LoginRequired], async function(req, res) {
+  const ownerTable = req.params.ownerTable;
+  const ownerId = parseInt(req.params.ownerId);
+
+  try {
+    let columns = ['id', 'owner_id as ownerId', 'owner_table as ownerTable', 'comment', 'created_by as createdBy', 'created_at as createdAt', 'organization_id as organizationId'];
+    let rows = await knex('comments as b').select(columns).where({ owner_table: ownerTable, owner_id: ownerId });
+    rows = Utils.serialize(rows);
+    let indexComments = false;
+    for (const element of rows) {
+      indexComments = await UtilsAsync.addDataToIndex(element, 'comments', 'delete');
+    };
+    await knex('comments').del().where({ owner_table: ownerTable, owner_id: ownerId });
+    res.json({ success: true, message: 'Comments deleted', indexdeleted: indexComments });
+  } catch (error) {
+    res.json({ success: false, message: 'Comments !deleted' });
+  };
+});
 
 function sendMail(value) {
   var mail = {

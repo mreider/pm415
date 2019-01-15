@@ -81,7 +81,6 @@ exports.serializeToIndex = async function(obj, type) {
 exports.serializeToIndexComment = async function(obj) {
   if (!obj) return undefined;
   if (typeof obj.toJSON === 'function') obj = obj.toJSON();
-
   let newObj = {
     title: '',
     description: '',
@@ -98,15 +97,15 @@ exports.serializeToIndexComment = async function(obj) {
   if (!obj.hasOwnProperty('ownerId') && obj.hasOwnProperty('owner_id')) {
     obj.ownerId = obj.owner_id;
   };
-
   if (obj.hasOwnProperty('ownerId')) {
     let rows = await knex(obj.ownerTable + ' as i').select('title', 'id', 'archived').where({ id: obj.ownerId });
     rows = Utils.serialize(rows);
     let owner = rows[0];
+
     if (owner) {
       newObj.title = owner.title;
       newObj.description = obj.comment;
-      newObj.id = owner.id;
+      newObj.id = obj.id;
       newObj.ownerId = obj.ownerId;
       newObj.ownerTable = obj.ownerTable;
       if (owner.archived === true) {
@@ -117,6 +116,7 @@ exports.serializeToIndexComment = async function(obj) {
       newObj.archived = owner.archived;
     };
   };
+
   if (obj.hasOwnProperty('createdBy') && !obj.hasOwnProperty('created_by')) {
     newObj.author.id = obj.createdBy;
   } else if (!obj.hasOwnProperty('createdBy') && obj.hasOwnProperty('created_by')) {
@@ -150,7 +150,7 @@ exports.addDataToIndex = async function (data, indexName, method) {
     await Axios[method](config.elasticsearch + '/' + indexName + '/' + indexName + '/' + dataToElastic.id, dataToElastic);
   } catch (error) {
     return false;
-  }
+  };
   return true;
 };
 
@@ -166,7 +166,7 @@ exports.search = async function (where, request, orgId) {
   let must = [];
   must.push({ multi_match: {
     query: request,
-    fields: ['title', 'description', 'comment', 'author.firstName', 'author.lastName', 'author.email', 'assignee.firstName', 'assignee.lastName', 'assignee.email'],
+    fields: ['title', 'description', 'comment', 'author.firstName', 'author.lastName', 'author.email', 'assignee.firstName', 'assignee.lastName', 'assignee.email', 'ownerTable'],
     type: 'phrase_prefix' }
   });
   let ownerMatch = {};

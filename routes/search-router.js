@@ -22,6 +22,7 @@ router.get('/:text/:orgId/:showArchived', [middlewares.LoginRequired], async (re
   let data = [];
   if (responce.hits) {
     responce.hits.forEach(element => {
+      element._source.tableOwner = element._source.ownerTable;
       if (showArchived === 'false') {
         if (element._source.archived === 0) {
           data.push(element._source);
