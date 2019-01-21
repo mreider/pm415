@@ -77,7 +77,11 @@ router.get('/:orgId/:bugid', middlewares.LoginRequired, async function(req, res)
   const assigneeData = await User.where({ id: rows[0].assignee }).fetch({ columns: ['first_name', 'last_name', 'id', 'email'] });
 
   rows[0].reportedBy = Utils.serialize(reportedByData);
-  rows[0].assignee = Utils.serialize(assigneeData);
+  if (assigneeData) {
+    rows[0].assignee = Utils.serialize(assigneeData);
+  } else {
+    rows[0].assignee = {};
+  };
   rows = Utils.serialize(rows);
 
   res.json({ success: true, bug: rows[0], admin: !!isAdmin });
