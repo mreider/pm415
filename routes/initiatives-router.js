@@ -131,6 +131,9 @@ router.delete('/:orgId/:initiativeId', [middlewares.LoginRequired], async functi
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'initiative not found' });
   };
+
+  await UtilsAsync.deleteCommentsConnections('initiatives', initiativeId, 'initiative_id');
+
   await UtilsAsync.addDataToIndex(initiative, 'initiatives', 'delete');
   await initiative.destroy();
 

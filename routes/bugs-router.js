@@ -61,13 +61,13 @@ router.get('/full/:showArchived/:orgId/:fullSelect', middlewares.LoginRequired, 
 });
 
 // // one bug info
-router.get('/:orgId/:bugid', middlewares.LoginRequired, async function(req, res) {
+router.get('/:orgId/:bugId', middlewares.LoginRequired, async function(req, res) {
   const orgId = parseInt(req.params.orgId);
-  const bugid = parseInt(req.params.bugid);
+  const bugId = parseInt(req.params.bugId);
   const columns = Bugs.fieldsToShow(true, 'b.').columns;
   let rows = await knex('bugs as b').select(columns)
     .where({ organization_id: orgId })
-    .where('b.id', '=', bugid);
+    .where('b.id', '=', bugId);
   const isAdmin = await UORole.where({ organization_id: orgId, user_id: req.user.id, role_id: Role.AdminRoleId }).fetch();
 
   if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
@@ -158,6 +158,8 @@ router.delete('/:orgId/:bugId', [middlewares.LoginRequired], async function(req,
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'bug not found' });
   };
+
+  await UtilsAsync.deleteCommentsConnections('bugs', bugId, 'bug_id');
 
   await UtilsAsync.addDataToIndex(bug, 'bugs', 'delete');
   await bug.destroy();

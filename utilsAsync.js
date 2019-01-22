@@ -183,3 +183,16 @@ exports.search = async function (where, request, orgId) {
   response.query = searchJson;
   return response;
 };
+
+exports.deleteCommentsConnections = async function (ownerTable, id, fieldName) {
+  let where = {};
+  where[fieldName] = id;
+  let columnComment = ['id', 'owner_id as ownerId', 'owner_table as ownerTable', 'comment', 'created_by as createdBy', 'created_at as createdAt', 'organization_id as organizationId'];
+  let rowsComment = await knex('comments as b').select(columnComment).where({ owner_id: id });
+  rowsComment = Utils.serialize(rowsComment);
+  for (const elementC of rowsComment) {
+    await this.addDataToIndex(elementC, 'comments', 'delete');
+  };
+  await knex('comments').del().where({ owner_id: id, owner_table: ownerTable });
+  await knex('connections').del().where(where);
+};

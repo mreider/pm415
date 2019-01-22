@@ -184,6 +184,9 @@ router.delete('/:orgId/:itemId', [middlewares.LoginRequired], async function(req
   } else {
     return res.boom.forbidden('Forbidden', { success: false, message: 'backlog not found' });
   };
+
+  await UtilsAsync.deleteCommentsConnections('items', itemId, 'item_id');
+
   await UtilsAsync.addDataToIndex(item, 'items', 'delete');
   await item.destroy();
 
