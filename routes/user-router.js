@@ -71,7 +71,7 @@ router.put('/', validate(UpdateUserSchema), async(req, res) => {
 });
 
 router.get('/apikey', function(req, res) {
-  const apikey = Utils.serialize(req.user).apiKey;
+  const apikey = req.user.apiKey;
 
   res.json({ success: true, apikey: apikey });
 });
