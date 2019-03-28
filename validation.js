@@ -166,7 +166,8 @@ const UpdateItemSchema = {
   actualRelease: Joi.date().optional(),
   plannedOn: Joi.date().optional(),
   mailers: Joi.string().optional().label('Mailers'),
-  archived: Joi.boolean().optional().label('Archived')
+  archived: Joi.boolean().optional().label('Archived'),
+  order_index: Joi.string().min(1).optional().label('order_index')
 };
 
 const CreateItemSchema = {
@@ -180,7 +181,8 @@ const CreateItemSchema = {
   forecastedRelease: Joi.date().optional(),
   actualRelease: Joi.date().optional(),
   plannedOn: Joi.date().optional(),
-  mailers: Joi.string().optional().label('Mailers')
+  mailers: Joi.string().optional().label('Mailers'),
+  order_index: Joi.string().min(1).optional().label('order_index')
 };
 
 const CreateUpdateCommentSchema = {

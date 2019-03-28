@@ -24,8 +24,8 @@ const Items = ModelBase.extend({
 {
   fieldsToShow(fullSelect, prefix, elementstopush) {
     let columns;
-    if (fullSelect === true) columns = ['created_at as createdAt', 'archived', 'owner_id as ownerId', 'points', 'assignee', 'id', 'title', 'description', 'status_id as statusId', 'created_by as createdBy', 'forecasted_release as forecastedRelease', 'actual_release as actualRelease', 'planned_on as plannedOn'];
-    if (fullSelect === false) columns = ['id', 'title', 'status_id as statusId', 'archived', 'created_by as createdBy', 'owner_id as ownerId'];
+    if (fullSelect === true) columns = ['created_at as createdAt', 'archived', 'owner_id as ownerId', 'points', 'assignee', 'id', 'title', 'description', 'status_id as statusId', 'order_index', 'created_by as createdBy', 'forecasted_release as forecastedRelease', 'actual_release as actualRelease', 'planned_on as plannedOn'];
+    if (fullSelect === false) columns = ['id', 'title', 'status_id as statusId', 'archived', 'created_by as createdBy', 'owner_id as ownerId', 'order_index'];
     if (prefix) {
       columns = columns.map(function(element) {
         return prefix + element;
