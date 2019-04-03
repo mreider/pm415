@@ -24,9 +24,9 @@ const Initiatives = ModelBase.extend({
     let columns;
 
     if (fullSelect) {
-      columns = ['created_at as createdAt', 'id', 'title', 'archived', 'description', 'horizon', 'created_by as createdBy', 'status_id as statusId', 'organization_id as organizationId'];
+      columns = ['created_at as createdAt', 'id', 'title', 'archived', 'description', 'horizon', 'created_by as createdBy', 'status_id as statusId', 'order_index', 'organization_id as organizationId'];
     } else {
-      columns = ['id', 'title', 'created_by as createdBy', 'archived'];
+      columns = ['id', 'title', 'created_by as createdBy', 'archived', 'order_index'];
     };
 
     if (prefix) {
