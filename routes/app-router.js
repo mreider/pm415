@@ -18,6 +18,8 @@ router.put('/orderindexchange/:orgId', [middlewares.LoginRequired, validate(Upda
 
   let items = req.body.items;
   let initiatives = req.body.initiatives;
+  items = items.reverse();
+  initiatives = initiatives.reverse();
 
   if (Utils.isPendingUser(orgId, req)) return res.boom.forbidden('Forbidden', { success: false, message: 'Organization privileges required' });
   let counter = 0;
