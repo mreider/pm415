@@ -200,6 +200,10 @@ const CreateUpdateDeleteConnectionsSchema = {
   bugs: Joi.array().required().label('bugs'),
   delete: Joi.boolean().required().label('delete')
 };
+const UpdateOrderIndexSchema = {
+  items: Joi.array().required().label('items'),
+  initiatives: Joi.array().required().label('initiatives')
+};
 
 module.exports = {
   validate: validate,
@@ -225,5 +229,6 @@ module.exports = {
   CreateUpdateDeleteConnectionsSchema,
   BugsSelectSchema,
   UpdateBugsSchema,
-  CreateBugsSchema
+  CreateBugsSchema,
+  UpdateOrderIndexSchema
 };
