@@ -191,7 +191,7 @@ router.get('/verify', async (req, res) => {
     users.forEach(sendMail, data);
   }
 
-  res.json({ userId: Utils.serialize(user).id, success: true, message: 'User registration is completed, lets go login' });
+  res.json({ userId: Utils.serialize(user).id, success: true, message: 'Account verified' });
 });
 
 function sendMail(value) {

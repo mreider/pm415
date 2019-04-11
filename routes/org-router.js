@@ -141,7 +141,7 @@ router.post('/:orgId/invitelink', [middlewares.LoginRequired, validate(InviteLin
   var mail = {
     from: Config.mailerConfig.from,
     to: email,
-    subject: 'invitelink',
+    subject: 'Join PM415',
     template: 'invite-link-registration',
     context: {
       confirmationUrl: confirmUrl
