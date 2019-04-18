@@ -196,3 +196,17 @@ exports.deleteCommentsConnections = async function (ownerTable, id, fieldName) {
   await knex('comments').del().where({ owner_id: id, owner_table: ownerTable });
   await knex('connections').del().where(where);
 };
+
+exports.addAuthorAndAssigneeToSubscribers = async function (ownerTable, ownerId, author, assignee) {
+  ownerId = String(ownerId);
+  console.log(ownerTable, ownerId, author, assignee);
+  await knex('subscribers').del().where({ owner: ownerTable, owner_id: ownerId, subowner_id: null });
+  if (author) {
+    author = String(author);
+    await knex('subscribers').insert([{ owner: ownerTable, owner_id: ownerId, userid: author }]);
+  }
+  if (assignee) {
+    assignee = String(assignee);
+    await knex('subscribers').insert([{ owner: ownerTable, owner_id: ownerId, userid: assignee }]);
+  }
+};

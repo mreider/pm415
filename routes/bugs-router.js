@@ -121,6 +121,9 @@ router.put('/edit/:orgId/:bugId', [middlewares.LoginRequired, validate(UpdateBug
 
   res.json({ success: true, bug });
   await UtilsAsync.addDataToIndex(bug, 'bugs', 'put');
+
+  let serialized = Utils.serialize(bug);
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('bugs', serialized.id, serialized.createdBy, serialized.assignee);
 });
 
 // new bug POST
@@ -141,7 +144,10 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateBugsSchema
 
   const bugs = await Bugs.create(data);
   res.json({ success: true, bugs });
+
   await UtilsAsync.addDataToIndex(bugs, 'bugs', 'put');
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('bugs', Utils.serialize(bugs).id, Utils.serialize(bugs).createdBy, Utils.serialize(bugs).assignee);
 });
 
 // delete bug
@@ -165,6 +171,8 @@ router.delete('/:orgId/:bugId', [middlewares.LoginRequired], async function(req,
   await bug.destroy();
 
   res.json({ success: true, bug: bugId, message: 'bug deleted' });
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('bugs', bugId);
 });
 
 module.exports = router;

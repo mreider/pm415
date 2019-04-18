@@ -133,6 +133,8 @@ router.put('/edit/:orgId/:itemId', [middlewares.LoginRequired, validate(UpdateIt
 
   res.json({ success: true, item });
   await UtilsAsync.addDataToIndex(item, 'items', 'put');
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('items', Utils.serialize(item).id, Utils.serialize(item).createdBy, Utils.serialize(item).assignee);
 });
 
 // new item
@@ -168,6 +170,8 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateItemSchema
   const item = await Item.create(data);
   res.json({ success: true, item }); // item
   await UtilsAsync.addDataToIndex(item, 'items', 'put');
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('items', Utils.serialize(item).id, Utils.serialize(item).created_by, Utils.serialize(item).assignee);
 });
 
 // delete item
@@ -191,6 +195,8 @@ router.delete('/:orgId/:itemId', [middlewares.LoginRequired], async function(req
   await item.destroy();
 
   res.json({ success: true, backlog: itemId, message: 'Item deleted' });
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('items', itemId);
 });
 
 module.exports = router;

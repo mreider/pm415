@@ -97,10 +97,11 @@ router.put('/edit/:orgId/:initiativeId', [middlewares.LoginRequired, validate(Up
 
   initiative.set(data);
   await initiative.save();
-
   res.json({ success: true, initiative });
 
   await UtilsAsync.addDataToIndex(initiative, 'initiatives', 'put');
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('initiatives', Utils.serialize(initiative).id, req.user.id);
 });
 
 // new Initiatives POST
@@ -115,6 +116,8 @@ router.post('/new/:orgId', [middlewares.LoginRequired, validate(CreateInitiative
   const initiative = await Initiative.create(data);
   res.json({ success: true, initiative });
   await UtilsAsync.addDataToIndex(initiative, 'initiatives', 'put');
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('initiatives', Utils.serialize(initiative).id, req.user.id);
 });
 
 // delete initiative
@@ -135,6 +138,9 @@ router.delete('/:orgId/:initiativeId', [middlewares.LoginRequired], async functi
   await UtilsAsync.deleteCommentsConnections('initiatives', initiativeId, 'initiative_id');
 
   await UtilsAsync.addDataToIndex(initiative, 'initiatives', 'delete');
+
+  await UtilsAsync.addAuthorAndAssigneeToSubscribers('initiatives', Utils.serialize(initiative).id);
+
   await initiative.destroy();
 
   res.json({ success: true, initiative: initiativeId, message: 'initiative deleted' });

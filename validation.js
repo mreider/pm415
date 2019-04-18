@@ -108,7 +108,7 @@ const UpdateInitiativesSchema = {
   statusId: Joi.string().optional().label('Status is'),
   mailers: Joi.string().optional().label('Mailers'),
   archived: Joi.boolean().optional().label('Archived'),
-  order_index: Joi.boolean().optional().label('order_index')
+  order_index: Joi.number().integer().optional().label('order_index')
 };
 
 const UpdateBugsSchema = {
@@ -129,7 +129,7 @@ const CreateInitiativesSchema = {
   popularity: Joi.string().optional().label('Popularity'),
   horizon: Joi.string().optional().label('Horizon'),
   mailers: Joi.string().optional().label('Mailers'),
-  order_index: Joi.string().optional().label('order_index')
+  order_index: Joi.number().integer().optional().label('order_index')
 };
 
 const CreateBacklogSchema = {
@@ -170,7 +170,7 @@ const UpdateItemSchema = {
   plannedOn: Joi.date().optional(),
   mailers: Joi.string().optional().label('Mailers'),
   archived: Joi.boolean().optional().label('Archived'),
-  order_index: Joi.string().min(1).optional().label('order_index')
+  order_index: Joi.number().integer().optional().label('order_index')
 };
 
 const CreateItemSchema = {
@@ -185,7 +185,7 @@ const CreateItemSchema = {
   actualRelease: Joi.date().optional(),
   plannedOn: Joi.date().optional(),
   mailers: Joi.string().optional().label('Mailers'),
-  order_index: Joi.string().min(1).optional().label('order_index')
+  order_index: Joi.number().integer().optional().label('order_index')
 };
 
 const CreateUpdateCommentSchema = {
