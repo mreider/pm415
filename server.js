@@ -76,7 +76,7 @@ const promiseApp = async () => {
     app.use('/api/bugs', BugsRouter);
     app.use('/api/search', SearchRouter);
     app.use('/api/rss', RssRouter);
-    app.use('/api/subscribe', SubscribeRourer);
+    app.use('/api/subscribers', SubscribeRourer);
 
     app.use(ErrorHandler);
 

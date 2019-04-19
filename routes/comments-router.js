@@ -4,7 +4,7 @@ const knex = require('../db').knex;
 const Comments = require('../models/comments');
 const UORole = require('../models/users_organizations_roles');
 const Role = require('../models/role');
-const Item = require('../models/items');
+// const Item = require('../models/items');
 
 const middlewares = require('../middlewares');
 const Utils = require('../utils');
@@ -16,6 +16,7 @@ const SendGridTransport = require('nodemailer-sendgrid-transport');
 const Handlebars = require('nodemailer-express-handlebars');
 
 const Config = require('../config');
+const Subscribers = require('../models/subscribers');
 
 const mailer = Nodemailer.createTransport(SendGridTransport(Config.mailerConfig));
 mailer.use('compile', Handlebars(Config.mailerConfig.rendererConfig));
@@ -43,13 +44,7 @@ router.post('/new/:ownerTable/:orgId/:ownerId', [middlewares.LoginRequired, vali
   }
   if (!haveOwner) return res.boom.notFound('Not found', { success: false, message: `Owner not found.` });
 
-  let mailers = '';
-  if (data.mailers) {
-    data.mailers.forEach(el => {
-      mailers = mailers + '!' + el + '!';
-    });
-  };
-  data.mailers = mailers;
+  data.mailers = '';
 
   const comment = await Comments.create(data);
 
@@ -80,21 +75,13 @@ router.put('/edit/:id', [middlewares.LoginRequired, validate(CreateUpdateComment
 
   const comment = await Comments.where({ id: id }).fetch();
   if (!comment) return res.boom.notFound('Not found', { success: false, message: `Comments not found.` });
-
-  let mailers = '';
-  if (data.mailers) {
-    data.mailers.forEach(el => {
-      mailers = mailers + '!' + el + '!';
-    });
-  };
-  data.mailers = mailers;
-
+  data.mailers = '';
   comment.set(data);
   await comment.save();
 
   await UtilsAsync.addDataToIndex(comment, 'comments', 'put');
 
-  sendNotice(Utils.serialize(comment));
+  // sendNotice(Utils.serialize(comment));
 
   res.json({ success: true, comment });
 });
@@ -172,12 +159,12 @@ async function sendNotice(ncomment) {
     subject = '[' + Config.domain + '] ' + '[' + userName + '] ' + 'commented on bug';
   };
 
-  const mailersWhoNeedSendMail = await Item.getAllBacklogMailers(ncomment.ownerId, ncomment.ownerTable);
+  const mailersWhoNeedSendMail = await Subscribers.getSubscribers(ncomment.ownerTable, ncomment.ownerId);
 
   mailersWhoNeedSendMail.forEach(el => {
     let value = {};
     value.href = url;
-    value.email = el;
+    value.email = el.email;
     value.subject = subject;
     value.userName = userName;
     value.comment = ncomment.comment;

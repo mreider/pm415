@@ -81,6 +81,12 @@ const InitiativesSelectSchema = {
   fullSelect: Joi.boolean().required().label('fullSelect')
 };
 
+const SubscribersInserDeleteSchema = {
+  subowner: Joi.string().min(0).optional().label('Subowner'),
+  subownerId: Joi.string().min(0).optional().label('SubownerId'),
+  usersId: Joi.array().required().label('Users Ids')
+};
+
 const BugsSelectSchema = {
   bugId: Joi.array().required().label('bugId'),
   fullSelect: Joi.boolean().required().label('fullSelect')
@@ -230,5 +236,6 @@ module.exports = {
   BugsSelectSchema,
   UpdateBugsSchema,
   CreateBugsSchema,
-  UpdateOrderIndexSchema
+  UpdateOrderIndexSchema,
+  SubscribersInserDeleteSchema
 };
