@@ -1,6 +1,5 @@
 const path = require('path');
-const domain = 'pm415.com';
-
+const domain = process.env.DOMAIN_URL;
 const config = {
   isProduction: process.env.NODE_ENV === 'production',
   isDebug: !this.isProduction,
@@ -10,7 +9,7 @@ const config = {
   siteUrl: 'http://localhost:8080/',
   appKey: '097129fcba444e2dbb8c91ab7002604f7c27503fcf4b46c18708f2852cb654dc',
 
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 8080,
   domain,
   feedList: ['http://www.mindtheproduct.com/feed/', 'https://www.reddit.com/r/prodmgmt/.rss?format=xml'],
   // feedList: [],
@@ -25,7 +24,7 @@ const config = {
     }
   },
 
-  elasticsearch: 'http://localhost:9200',
+  elasticsearch: process.env.ELASTIC_SEARCH_URL,
 
   cors: {
     credentials: true,
@@ -75,7 +74,7 @@ const config = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  config.siteUrl = 'https://zagnut.herokuapp.com/';
+  config.siteUrl = 'https://pm415.com';
 }
 
 module.exports = config;
