@@ -1,18 +1,18 @@
 const path = require('path');
 const domain = process.env.DOMAIN_URL;
-const feedlist = process.env.FEEDLIST.split(",");
 const config = {
   isProduction: process.env.NODE_ENV === 'production',
   isDebug: !this.isProduction,
 
   keepAwake: !!process.env.KEEP_PROCESS_AWAKE,
 
-  siteUrl: process.env.SITEURL_DEV + ":" + process.env.PORT,
-  appKey: process.env.APPKEY,
+  siteUrl: 'http://localhost:8080/',
+  appKey: '097129fcba444e2dbb8c91ab7002604f7c27503fcf4b46c18708f2852cb654dc',
 
   port: process.env.PORT || 8080,
   domain,
-  feedList: feedlist,
+  feedList: ['http://www.mindtheproduct.com/feed/', 'https://www.reddit.com/r/prodmgmt/.rss?format=xml'],
+  // feedList: [],
 
   db: {
     databaseUri: process.env.DATABASE_URL,
@@ -31,7 +31,11 @@ const config = {
     origin: function(origin, callback) {
       if (typeof origin === 'undefined') return callback(null, true);
 
-      const whitelist = process.env.WHITELIST.split(",");
+      const whitelist = [
+        /localhost/,
+        /zagnut.herokuapp.com/,
+        /pm415.com/
+      ];
 
       for (let i = 0; i < whitelist.length; i++) {
         const element = whitelist[i];
@@ -70,7 +74,7 @@ const config = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  config.siteUrl = 'https://' + process.env.DOMAIN_URL;
+  config.siteUrl = 'https://pm415.com';
 }
 
 module.exports = config;
