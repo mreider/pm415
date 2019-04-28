@@ -1,6 +1,5 @@
 const path = require('path');
 const domain = process.env.DOMAIN_URL;
-const feedlist = process.env.FEEDLIST.split(',');
 const config = {
   isProduction: process.env.NODE_ENV === 'production',
   isDebug: !this.isProduction,
@@ -12,8 +11,8 @@ const config = {
 
   port: process.env.PORT || 8080,
   domain,
-  feedList: feedlist,
-
+  feedList: ['http://www.mindtheproduct.com/feed/', 'https://www.reddit.com/r/prodmgmt/.rss?format=xml'],
+  
   db: {
     databaseUri: process.env.DATABASE_URL,
 
@@ -31,7 +30,12 @@ const config = {
     origin: function(origin, callback) {
       if (typeof origin === 'undefined') return callback(null, true);
 
-      const whitelist = process.env.WHITELIST.split(',');
+     const whitelist = [
+        /localhost/,
+        /pm415.com/,
+        /zagnut.herokuapp.com/,
+        /6sprints.com/
+      ];
 
       for (let i = 0; i < whitelist.length; i++) {
         const element = whitelist[i];
