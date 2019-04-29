@@ -12,7 +12,7 @@ const config = {
   port: process.env.PORT || 8080,
   domain,
   feedList: ['http://www.mindtheproduct.com/feed/', 'https://www.reddit.com/r/prodmgmt/.rss?format=xml'],
-  
+
   db: {
     databaseUri: process.env.DATABASE_URL,
 
@@ -30,19 +30,23 @@ const config = {
     origin: function(origin, callback) {
       if (typeof origin === 'undefined') return callback(null, true);
 
-     const whitelist = [
-        /localhost/,
-        /pm415.com/,
-        /zagnut.herokuapp.com/,
-        /6sprints.com/
-      ];
+    // removing whitelist and just going with one domain in the DOMAIN_URL
+    // const whitelist = [
+    //    /localhost/,
+    //    /pm415.com/,
+    //    /zagnut.herokuapp.com/,
+    //    /6sprints.com/
+    //  ];
 
-      for (let i = 0; i < whitelist.length; i++) {
-        const element = whitelist[i];
+    //  for (let i = 0; i < whitelist.length; i++) {
+    //    const element = whitelist[i];
 
-        if (element.test(origin)) return callback(null, true);
-      }
+    //    if (element.test(origin)) return callback(null, true);
+    //  }
 
+    // This one is for just one domain...
+      domain_slashes = "/" + domain + "/";
+      if (domain_slashes.test(origin)) return callback(null, true);
       callback(new Error(`Not allowed by CORS: "${origin}"`));
     },
     optionsSuccessStatus: 200

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pm415
+  labels:
+    app: pm415
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pm415
+  template:
+    metadata:
+      labels:
+        app: pm415
+    spec:
+      containers:
+        - image: gcr.io/pm415-238921/pm415
+          name: pm415
+          resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "128Mi"
+                  cpu: "100m"
+          env:
+          - name: NODE_ENV
+            value: PRODUCTION
+          - name: KEEP_PROCESS_AWAKE
+            value: "1"
+          - name: DATABASE_HOST
+            value: mysql:3306
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql
+                key: password
+          - name: ELASTIC_SEARCH_HOST
+            value: elasticsearch:9200
+          - name: SENDGRID_USERNAME
+            value: mreider+1@gmail.com
+          - name: SENDGRID_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: sendgrid
+                key: password
+          - name: SITEURL_DEV
+            value: http://localhost
+          - name: PORT
+            value: "80"
+          - name: APPKEY
+            valueFrom:
+              secretKeyRef:
+                name: appkey
+                key: password
+          ports:
+            - containerPort: 80
+              name: pm415
