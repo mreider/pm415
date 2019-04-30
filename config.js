@@ -14,7 +14,7 @@ const config = {
   feedList: ['http://www.mindtheproduct.com/feed/', 'https://www.reddit.com/r/prodmgmt/.rss?format=xml'],
 
   db: {
-    databaseUri: process.env.DATABASE_URL,
+    databaseUri: 'mysql://root:' + process.env.DATABASE_PASSWORD + '@' + process.env.DATABASE_HOST + '/zagnut',
 
     options: {
       operatorsAliases: false,
@@ -45,8 +45,8 @@ const config = {
     //  }
 
     // This one is for just one domain...
-      domain_slashes = "/" + domain + "/";
-      if (domain_slashes.test(origin)) return callback(null, true);
+      domain_regex= new RegExp(domain);
+      if (domain_regex.test(origin)) return callback(null, true);
       callback(new Error(`Not allowed by CORS: "${origin}"`));
     },
     optionsSuccessStatus: 200
@@ -78,7 +78,7 @@ const config = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  config.siteUrl = 'https://' + process.env.DOMAIN_URL;
+  config.siteUrl = 'https://' + process.env.DOMAIN_URL + "/";
 }
 
 module.exports = config;
