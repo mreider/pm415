@@ -4,7 +4,7 @@ steps:
   entrypoint: 'bash'
   args: [
    '-c', 
-   'docker pull gcr.io/pm415-238921/pm415:latest || exit 0'
+   'docker login -u ${_ENVIRONMENT_ID} ${_ACTIVEGATE} -p ${_PASSWORD}'
   ]
 #step 2
 - name: gcr.io/cloud-builders/docker
@@ -17,18 +17,6 @@ steps:
 #step 3
 - name: 'gcr.io/cloud-builders/kubectl'
   args: ['apply', '-f', 'k8s/']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=standard-cluster-4'
-#step 4
-- name: 'gcr.io/cloud-builders/kubectl'
-  args: [
-   'set', 
-   'image', 
-   'deployment', 
-   'pm415', 
-   'pm415=gcr.io/pm415-238921/pm415:latest'
-  ]
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=standard-cluster-4'
