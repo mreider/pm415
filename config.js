@@ -78,7 +78,7 @@ const config = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  config.siteUrl = 'https://' + process.env.DOMAIN_URL + "/";
+  config.siteUrl = 'http://' + process.env.DOMAIN_URL + "/";
 }
 
 module.exports = config;

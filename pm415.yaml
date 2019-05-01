@@ -70,11 +70,11 @@ spec:
           name: pm415
           resources:
                 requests:
-                  memory: "128Mi"
-                  cpu: "100m"
+                  memory: "1Gi"
+                  cpu: "500m"
                 limits:
-                  memory: "128Mi"
-                  cpu: "100m"
+                  memory: "1Gi"
+                  cpu: "500m"
           env: *env-vars
           ports:
             - containerPort: 80
