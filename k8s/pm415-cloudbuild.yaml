@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pm415
+  labels:
+    app: pm415
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pm415
+  template:
+    metadata:
+      labels:
+        app: pm415
+    spec:
+      initContainers:
+        - name: createdb
+          image: gcr.io/pm415-238921/pm415
+          command:
+          - mysql
+          - -u
+          - root
+          - -p$(DATABASE_PASSWORD)
+          - --host
+          - $(DATABASE_HOST)
+          - --execute
+          - CREATE DATABASE IF NOT EXISTS zagnut;
+          env: &env-vars
+          - name: NODE_ENV
+            value: production
+          - name: KEEP_PROCESS_AWAKE
+            value: "1"
+          - name: DATABASE_HOST
+            value: mysql
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql
+                key: password
+          - name: ELASTIC_SEARCH_HOST
+            value: elasticsearch
+          - name: SENDGRID_USERNAME
+            value: mreider+1@gmail.com
+          - name: SENDGRID_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: sendgrid
+                key: password
+          - name: SITEURL_DEV
+            value: http://localhost
+          - name: DOMAIN_URL
+            value: 6sprints.com
+          - name: PORT
+            value: "80"
+          - name: APPKEY
+            valueFrom:
+              secretKeyRef:
+                name: appkey
+                key: password
+        - name: run-migrations
+          image: gcr.io/pm415-238921/pm415
+          command:
+          - /bin/sh
+          - -c
+          - knex migrate:latest ; knex seed:run ; exit 0
+          env: *env-vars
+      containers:
+        - image: gcr.io/pm415-238921/pm415
+          name: pm415
+          resources:
+                requests:
+                  memory: "1Gi"
+                  cpu: "500m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+          env: *env-vars
+          ports:
+            - containerPort: 80
+              name: pm415
