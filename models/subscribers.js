@@ -1,15 +1,10 @@
 const ModelBase = require('../db').modelBase;
 const Bookshelf = require('../db').bookshelf;
 const knex = require('../db').knex;
-// const Organization = require('./organization');
-// const User = require('./user');
+const _ = require('lodash');
 
 const Subscribers = ModelBase.extend({
   tableName: 'subscribers'
-  // Association
-  // organization() {
-  //   return this.belongsTo(Organization);
-  // }
 },
 {
   async getSubscribers(ownerTable, id, subowner, subownerId) {
@@ -31,6 +26,7 @@ const Subscribers = ModelBase.extend({
   async addDeleteUsers(ownerTable, ownerId, subowner, subownerId, usersId) {
     ownerId = String(ownerId);
     let dataToInsert = [];
+    usersId = _.uniq(usersId);
 
     if (!subowner && !subownerId) {
       await knex('subscribers').del().where({ owner: ownerTable, owner_id: ownerId, subowner_id: null });
@@ -52,6 +48,7 @@ const Subscribers = ModelBase.extend({
   },
   async DeleteUsers(ownerTable, ownerId, subowner, subownerId, usersId) {
     ownerId = String(ownerId);
+    usersId = _.uniq(usersId);
 
     if (!subowner && !subownerId) {
       await knex('subscribers').del().where({ owner: ownerTable, owner_id: ownerId, subowner_id: null }).whereIn('userid', usersId);
