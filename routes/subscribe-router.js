@@ -1,5 +1,6 @@
 const Express = require('express');
 const router = Express.Router();
+const knex = require('../db').knex;
 
 const middlewares = require('../middlewares');
 
@@ -24,6 +25,25 @@ router.get('/:ownerTable/:id', [middlewares.LoginRequired], async (req, res) => 
   const id = parseInt(req.params.id);
   const ownerTable = req.params.ownerTable;
   let subscribers = await Subscribers.getSubscribers(ownerTable, id);
+
+  return res.json({ success: true, subscribers });
+});
+
+// get subscribers with subowners id array of users
+router.get('/all/:ownerTable/:id', [middlewares.LoginRequired], async (req, res) => {
+  const id = parseInt(req.params.id);
+  const ownerTable = req.params.ownerTable;
+  let data = await knex('subscribers').select().leftJoin('users as u', 'subscribers.userid', 'u.id').where({ owner: ownerTable, owner_id: String(id) });
+  let subscribers = {};
+  subscribers.ownerSubscribers = [];
+  subscribers.subownerSubscribers = [];
+  data.forEach(element => {
+    if (element.subowner === null) {
+      subscribers.ownerSubscribers.push({ email: element.email, firstName: element.first_name, lastName: element.last_name, id: element.userid });
+    } else {
+      subscribers.subownerSubscribers.push({ email: element.email, firstName: element.first_name, lastName: element.last_name, id: element.userid, subowner: element.subowner, subownerId: element.subownerId });
+    }
+  });
 
   return res.json({ success: true, subscribers });
 });

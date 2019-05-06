@@ -14,6 +14,7 @@ const Subscribers = ModelBase.extend({
 {
   async getSubscribers(ownerTable, id, subowner, subownerId) {
     let data;
+
     if (!subowner && !subownerId) {
       data = await knex('subscribers').select().leftJoin('users as u', 'subscribers.userid', 'u.id').where({ owner: ownerTable, owner_id: String(id), subowner: null, subowner_id: null });
     } else {
