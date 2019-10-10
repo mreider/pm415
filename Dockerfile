@@ -1,6 +1,4 @@
 FROM node:10
-COPY --from=nyt91548.live.dynatrace.com/linux/oneagent-codemodules:nodejs / /
-ENV LD_PRELOAD /opt/dynatrace/oneagent/agent/lib64/liboneagentproc.so
 
 # Create app directory
 WORKDIR /usr/src/app
