@@ -16,7 +16,7 @@ spec:
     spec:
       initContainers:
         - name: createdb
-          image: gcr.io/pm415-238921/pm415
+          image: docker.io/mreider/pm415:1.1
           command:
           - mysql
           - -u
