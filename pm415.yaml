@@ -59,7 +59,7 @@ spec:
                 name: appkey
                 key: password
         - name: run-migrations
-          image: gcr.io/pm415-238921/pm415
+          image: mreider/pm415:1.1
           command:
           - /bin/sh
           - -c
