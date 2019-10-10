@@ -16,7 +16,7 @@ spec:
     spec:
       initContainers:
         - name: createdb
-          image: docker.io/mreider/pm415:1.1
+          image: mreider/pm415:1.1
           command:
           - mysql
           - -u
@@ -66,7 +66,7 @@ spec:
           - knex migrate:latest ; knex seed:run ; exit 0
           env: *env-vars
       containers:
-        - image: gcr.io/pm415-238921/pm415
+        - image: mreider/pm415:1.1
           name: pm415
           resources:
                 requests:
