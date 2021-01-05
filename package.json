@@ -23,7 +23,7 @@
   "author": "Alex Popov",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "body-parser": "^1.18.3",
     "bookshelf": "^0.13.3",
     "bookshelf-camelcase": "^2.0.1",
