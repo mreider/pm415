@@ -37,7 +37,7 @@
     "express-bearer-token": "^2.1.1",
     "express-boom": "^2.0.0",
     "joi": "^13.3.0",
-    "jsonwebtoken": "^8.3.0",
+    "jsonwebtoken": "^9.0.0",
     "knex": "^0.15.2",
     "knex-migrate": "^1.6.1",
     "lodash": "^4.17.11",
